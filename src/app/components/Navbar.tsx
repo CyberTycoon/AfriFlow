@@ -1,10 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import Link from "next/link";
+import { AuthContext } from "../context/AuthContext";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const auth = useContext(AuthContext);
+  const userData = auth?.userData;
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+
+  useEffect(() => { 
+    if (userData) {
+      setIsLoggedIn(true);
+    }
+  }, [userData]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 min-w-full  z-50 bg-gray-900 border-b border-amber-900/30">
@@ -21,7 +31,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-6">
             <a
               href="#about"
               className="text-amber-100/80 hover:text-amber-400 transition-colors"
@@ -43,17 +53,37 @@ const Navbar = () => {
             <Link
               href="/login"
               prefetch
-              className="text-amber-100/80 hover:text-amber-400 transition-colors"
+              className={`${isLoggedIn ? 'hidden' : 'text-amber-100/80 hover:text-amber-400 transition-colors'}`}
             >
               Login
             </Link>
             <Link
               href="/signup"
               prefetch
-              className="bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-md shadow-amber-900/20"
+              className={`${isLoggedIn? 'hidden': "bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-md shadow-amber-900/20"}`}
             >
               Sign Up
             </Link>
+            {isLoggedIn && (
+              <>
+                <button
+                  onClick={() => {
+                    auth?.logout();
+                    setIsLoggedIn(false);
+                  }}
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-md shadow-amber-900/20"
+                >
+                  LogOut
+                </button>
+                <Link
+                  href="/dashboard"
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-md shadow-amber-900/20"
+                >
+                  Dashboard
+                </Link>
+              </>
+            )}
+
           </div>
 
           {/* Mobile Hamburger */}

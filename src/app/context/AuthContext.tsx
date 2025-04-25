@@ -39,9 +39,12 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   };
 
   const logout = () => {
-    setUserData(null)
-    setToken(null)
-  }
+    setUserData(null);
+    setToken(null);
+    localStorage.removeItem("userData");
+    localStorage.removeItem("token");
+  };
+  
   return (
     <AuthContext.Provider value={{ userData, token, login, logout }}>
       {children}
