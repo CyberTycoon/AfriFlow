@@ -3,7 +3,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { AuthContext } from "../context/AuthContext";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -12,6 +12,7 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const pathname = usePathname();
   const [dashboard, setDashboard] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (userData) {
@@ -22,6 +23,12 @@ const Navbar = () => {
   useEffect(() => {
     setDashboard(pathname === "/dashboard");
   }, [pathname]);
+
+  const handleLogout = () => {
+    auth?.logout();              // clear context and tokens
+    setIsLoggedIn(false);        // update local state
+    router.push("/");       // then navigate
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 min-w-full  z-50 bg-gray-900 border-b border-amber-900/30">
@@ -83,8 +90,7 @@ const Navbar = () => {
               <>
                 <button
                   onClick={() => {
-                    auth?.logout();
-                    setIsLoggedIn(false);
+                    handleLogout();
                   }}
                   className="bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-md shadow-amber-900/20"
                 >

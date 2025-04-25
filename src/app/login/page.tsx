@@ -83,6 +83,8 @@ export default function LoginPage() {
   
       setTimeout(() => {
         router.push("/dashboard");
+        login(tokenData, data.access);
+      console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
         setIsLoading(false);
       }, 2000);
     } catch (error) {
