@@ -13,12 +13,23 @@ const Navbar = () => {
   const pathname = usePathname();
   const [dashboard, setDashboard] = useState(false);
   const router = useRouter();
+  const [prevPathname, setPrevPathname] = useState(pathname)
+
+
 
   useEffect(() => {
     if (userData) {
       setIsLoggedIn(true);
     } 
   }, [userData]);
+
+  useEffect(() => {
+    if (pathname !== prevPathname) {
+      setPrevPathname(pathname); // update stored path
+      setMobileMenuOpen(false);  // close menu
+    }
+  }, [pathname, prevPathname]);
+
 
   useEffect(() => {
     setDashboard(pathname === "/dashboard");
