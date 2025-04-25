@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import {useContext, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -21,10 +21,23 @@ import {
   Search,
   ChevronDown,
 } from "lucide-react";
+import { AuthContext } from "../context/AuthContext";
+
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const auth = useContext(AuthContext); // ✅
+
+  if (!auth) {
+    // You can throw an error or handle unauthenticated state
+    throw new Error("AuthContext is undefined — are you inside <AuthProvider>?");
+  }
+
+  const userData = auth.userData as { full_name?: string; email?: string };
+  
+  
+ // Accessing user data and token from context
 
 
   return (
@@ -127,9 +140,9 @@ export default function Dashboard() {
                 </div>
               </div>
               <div>
-                <div className="font-medium text-amber-100">Adeola Johnson</div>
+                <div className="font-medium text-amber-100">{String(userData?.full_name || "Guest")}</div>
                 <div className="text-xs text-amber-100/60">
-                  adeola@example.com
+                  {String(userData?.email || "Guest_email")}
                 </div>
               </div>
             </div>
@@ -242,10 +255,10 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <div className="font-medium text-amber-100">
-                    Adeola Johnson
+                  {String(userData?.full_name || "Guest")}
                   </div>
                   <div className="text-xs text-amber-100/60">
-                    adeola@example.com
+                  {String(userData?.email || "Guest_email")}
                   </div>
                 </div>
               </div>
@@ -290,7 +303,7 @@ export default function Dashboard() {
                 <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center mr-2">
                   <User className="h-4 w-4 text-amber-400" />
                 </div>
-                <span className="text-amber-100 mr-1">Adeola</span>
+                <span className="text-amber-100 mr-1">{userData?.full_name?.split(" ")[0] || "Guest"}</span>
                 <ChevronDown className="h-4 w-4 text-amber-100/60" />
               </div>
             </div>
@@ -301,7 +314,7 @@ export default function Dashboard() {
         <main className="p-4 sm:p-6 lg:p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-amber-400 mb-2">
-              Welcome back, Adeola!
+              Welcome back, {String(userData?.full_name?.split(" ")[0] || "Guest")}
             </h1>
             <p className="text-amber-100/60">
               Here&apos;s what&apos;s happening with your account today.

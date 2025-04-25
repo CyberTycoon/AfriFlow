@@ -3,18 +3,25 @@
 import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { AuthContext} from "../context/AuthContext"
+import { useContext } from "react"
 
 
 export default function LoginPage() {
 
   const router = useRouter()
+  const authContext = useContext(AuthContext);
+
+  if (!authContext) {
+    throw new Error("AuthContext is not provided");
+  }
+
+  const { login } = authContext;
   const [formData, setFormData] = useState({ email: "", password: "" })
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
  
-
-
-  const login = async () => {
+  const loginUser = async () => {
     setErrorMessage(null);
     setIsLoading(true);
   
@@ -48,6 +55,10 @@ export default function LoginPage() {
       
       const tokenData = await getToken.json();
       console.log("📥 [Frontend] User info response:", tokenData);
+
+      login(tokenData, data.access);
+      console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
+      // Store user data and token in context
   
       if (!response.ok) {
         let errorMsg = "Login failed. Please try again.";
@@ -183,7 +194,7 @@ export default function LoginPage() {
               </div>
 
               <button
-                onClick={login}
+                onClick={loginUser}
                 disabled={isLoading}
                 className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold rounded-lg hover:from-amber-400 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-300 flex items-center justify-center shadow-lg shadow-amber-900/20">
                                 {isLoading ? (
