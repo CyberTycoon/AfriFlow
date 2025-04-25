@@ -25,6 +25,7 @@ import {
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const 
 
   return (
     <div className="min-h-screen bg-gray-900 text-white mt-15">

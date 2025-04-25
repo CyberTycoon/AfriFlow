@@ -37,6 +37,17 @@ export default function LoginPage() {
       const data = await response.json();
   
       console.log("📥 [Frontend] Login response:", data);
+
+      const getToken = await fetch("/api/userToken", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.access}`,
+        },
+      });
+      
+      const tokenData = await getToken.json();
+      console.log("📥 [Frontend] User info response:", tokenData);
   
       if (!response.ok) {
         let errorMsg = "Login failed. Please try again.";
