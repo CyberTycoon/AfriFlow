@@ -1,20 +1,27 @@
 "use client";
 
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { AuthContext } from "../context/AuthContext";
+import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const auth = useContext(AuthContext);
   const userData = auth?.userData;
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const pathname = usePathname();
+  const [dashboard, setDashboard] = useState(false);
 
-  useEffect(() => { 
+  useEffect(() => {
     if (userData) {
       setIsLoggedIn(true);
-    }
+    } 
   }, [userData]);
+
+  useEffect(() => {
+    setDashboard(pathname === "/dashboard");
+  }, [pathname]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 min-w-full  z-50 bg-gray-900 border-b border-amber-900/30">
@@ -53,14 +60,22 @@ const Navbar = () => {
             <Link
               href="/login"
               prefetch
-              className={`${isLoggedIn ? 'hidden' : 'text-amber-100/80 hover:text-amber-400 transition-colors'}`}
+              className={`${
+                isLoggedIn
+                  ? "hidden"
+                  : "text-amber-100/80 hover:text-amber-400 transition-colors"
+              }`}
             >
               Login
             </Link>
             <Link
               href="/signup"
               prefetch
-              className={`${isLoggedIn? 'hidden': "bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-md shadow-amber-900/20"}`}
+              className={`${
+                isLoggedIn
+                  ? "hidden"
+                  : "bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-md shadow-amber-900/20"
+              }`}
             >
               Sign Up
             </Link>
@@ -75,15 +90,16 @@ const Navbar = () => {
                 >
                   LogOut
                 </button>
-                <Link
-                  href="/dashboard"
-                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-md shadow-amber-900/20"
-                >
-                  Dashboard
-                </Link>
+                {dashboard == false && (
+                  <Link
+                    href="/dashboard"
+                    className="bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-md shadow-amber-900/20"
+                  >
+                    Dashboard
+                  </Link>
+                )}
               </>
             )}
-
           </div>
 
           {/* Mobile Hamburger */}
