@@ -352,35 +352,11 @@ const formatCurrency = (amount: number): string => {
                       }`}
                     >
                       {transaction.type === "incoming" ? (
-                        <ArrowDownLeft
-                          className={`h-5 w-5 ${
-                            transaction.type === "incoming"
-                              ? "text-emerald-500"
-                              : transaction.type === "outgoing"
-                              ? "text-red-500"
-                              : "text-amber-500"
-                          }`}
-                        />
+                        <ArrowDownLeft className="h-5 w-5 text-emerald-500" />
                       ) : transaction.type === "outgoing" ? (
-                        <ArrowUpRight
-                          className={`h-5 w-5 ${
-                            transaction.type === "incoming"
-                              ? "text-emerald-500"
-                              : transaction.type === "outgoing"
-                                ? "text-red-500"
-                                : "text-amber-500"
-                          }`}
-                        />
+                        <ArrowUpRight className="h-5 w-5 text-red-500" />
                       ) : (
-                        <CreditCard
-                          className={`h-5 w-5 ${
-                            transaction.type === "incoming"
-                              ? "text-emerald-500"
-                              : transaction.type === "outgoing"
-                                ? "text-red-500"
-                                : "text-amber-500"
-                          }`}
-                        />
+                        <CreditCard className="h-5 w-5 text-amber-500" />
                       )}
                     </div>
                     <div>
