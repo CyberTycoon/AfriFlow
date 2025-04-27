@@ -1,24 +1,32 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import type React from "react"
+
+import { useState, useEffect, useContext} from "react"
 import {
   ArrowUpRight,
   ArrowDownLeft,
   DollarSign,
   Send,
-  CreditCard,
   AlertCircle,
   CheckCircle2,
   Repeat,
+  Copy,
+  QrCode,
+  Share2,
+  ArrowLeftRight,
 } from "lucide-react"
 import TransactionSkeleton from "@/app/components/skeletons/transaction-skeleton"
+import {AuthContext} from "@/app/context/AuthContext"
 
 export default function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState(false)
-
+    const [copiedText, setCopiedText] = useState<string | null>(null)
+    const auth = useContext(AuthContext)
+    const user = (auth?.userData as { full_name?: string; email?: string }) || {}
   // Form state
   const [formData, setFormData] = useState({
     transactionType: "transfer",
@@ -31,6 +39,10 @@ export default function TransactionsPage() {
   const userData = {
     balance: 24568.8,
     currency: "USD",
+    accountNumber: "2458-7896-3214-0067",
+    accountName: user.full_name,
+    bankName: "AfriFlow Bank",
+    swiftCode: "AFBNIGLA",
     recentTransactions: [
       {
         id: 1,
@@ -70,6 +82,39 @@ export default function TransactionsPage() {
         status: "Completed",
       },
     ],
+    // Mock exchange rates
+    exchangeRates: {
+      USD: {
+        NGN: 920,
+        GHS: 12.5,
+        KES: 130.75,
+        ZAR: 18.6,
+      },
+      NGN: {
+        USD: 0.00109,
+        GHS: 0.0136,
+        KES: 0.142,
+        ZAR: 0.0202,
+      },
+      GHS: {
+        USD: 0.08,
+        NGN: 73.6,
+        KES: 10.46,
+        ZAR: 1.49,
+      },
+      KES: {
+        USD: 0.00765,
+        NGN: 7.03,
+        GHS: 0.0956,
+        ZAR: 0.142,
+      },
+      ZAR: {
+        USD: 0.0538,
+        NGN: 49.46,
+        GHS: 0.672,
+        KES: 7.03,
+      },
+    },
   }
 
   useEffect(() => {
@@ -81,66 +126,72 @@ export default function TransactionsPage() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Handle copy to clipboard
+  const handleCopy = (text: string, type: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setCopiedText(type)
+        setTimeout(() => setCopiedText(null), 2000)
+      },
+      (err) => {
+        console.error("Could not copy text: ", err)
+      },
+    )
+  }
 
-const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
     setFormData({
-        ...formData,
-        [name]: value,
-    });
-};
+      ...formData,
+      [name]: value,
+    })
+  }
 
-interface TransactionTypeChangeHandler {
-    (type: string): void;
-}
-
-const handleTransactionTypeChange: TransactionTypeChangeHandler = (type) => {
+  const handleTransactionTypeChange = (type: string) => {
     setFormData({
-        ...formData,
-        transactionType: type,
-    });
-};
+      ...formData,
+      transactionType: type,
+    })
+  }
 
-interface SubmitEvent {
-    preventDefault: () => void;
-}
-
-const handleSubmit = (e: SubmitEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Validate form
-    if (!formData.accountNumber || !formData.amount) {
-        setShowError(true)
-        setIsSubmitting(false)
-        setTimeout(() => setShowError(false), 3000)
-        return
+    // Different validation based on transaction type
+    if (formData.transactionType === "transfer" && (!formData.accountNumber || !formData.amount)) {
+      setShowError(true)
+      setIsSubmitting(false)
+      setTimeout(() => setShowError(false), 3000)
+      return
     }
 
     // Simulate API call
     setTimeout(() => {
-        setIsSubmitting(false)
-        setShowSuccess(true)
+      setIsSubmitting(false)
+      setShowSuccess(true)
 
-        // Reset form
+      // Reset form based on transaction type
+      if (formData.transactionType === "transfer") {
         setFormData({
-            transactionType: "transfer",
-            accountNumber: "",
-            amount: "",
-            description: "",
+          ...formData,
+          accountNumber: "",
+          amount: "",
+          description: "",
         })
+      }
 
-        // Hide success message after 3 seconds
-        setTimeout(() => setShowSuccess(false), 3000)
+      // Hide success message after 3 seconds
+      setTimeout(() => setShowSuccess(false), 3000)
     }, 1500)
-}
+  }
 
-const formatCurrency = (amount: number): string => {
+  const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
+      style: "currency",
+      currency: "USD",
     }).format(amount)
-}
+  }
 
   if (isLoading) {
     return <TransactionSkeleton />
@@ -157,7 +208,13 @@ const formatCurrency = (amount: number): string => {
       {showSuccess && (
         <div className="mb-6 bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-4 flex items-center text-emerald-400">
           <CheckCircle2 className="h-5 w-5 mr-2" />
-          <span>Transaction completed successfully!</span>
+          <span>
+            {formData.transactionType === "transfer"
+              ? "Transaction completed successfully!"
+              : formData.transactionType === "payment"
+                ? "Account details copied successfully!"
+                : "Currency exchange completed successfully!"}
+          </span>
         </div>
       )}
 
@@ -188,144 +245,367 @@ const formatCurrency = (amount: number): string => {
       <div className="grid md:grid-cols-2 gap-8">
         <div className="bg-gray-800/80 rounded-xl border border-amber-500/20 overflow-hidden">
           <div className="p-6 border-b border-amber-900/30">
-            <h2 className="text-lg font-bold text-amber-400">Make a Transaction</h2>
+            <h2 className="text-lg font-bold text-amber-400">
+              {formData.transactionType === "transfer"
+                ? "Send Money"
+                : formData.transactionType === "payment"
+                  ? "Receive Money"
+                  : "Exchange Currency"}
+            </h2>
           </div>
           <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Transaction type */}
-              <div>
-                <label className="block mb-2 text-amber-100">Transaction Type</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    className={`flex flex-col items-center justify-center p-3 rounded-lg border ${
-                      formData.transactionType === "transfer"
-                        ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
-                        : "bg-gray-700/50 border-amber-500/10 text-amber-100/60 hover:bg-gray-700/70"
-                    }`}
-                    onClick={() => handleTransactionTypeChange("transfer")}
-                  >
-                    <Send className="h-5 w-5 mb-1" />
-                    <span className="text-sm">Transfer</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex flex-col items-center justify-center p-3 rounded-lg border ${
-                      formData.transactionType === "payment"
-                        ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
-                        : "bg-gray-700/50 border-amber-500/10 text-amber-100/60 hover:bg-gray-700/70"
-                    }`}
-                    onClick={() => handleTransactionTypeChange("payment")}
-                  >
-                    <ArrowDownLeft className="h-5 w-5 mb-1" />
-                    <span className="text-sm">Receive</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex flex-col items-center justify-center p-3 rounded-lg border ${
-                      formData.transactionType === "request"
-                        ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
-                        : "bg-gray-700/50 border-amber-500/10 text-amber-100/60 hover:bg-gray-700/70"
-                    }`}
-                    onClick={() => handleTransactionTypeChange("request")}
-                  >
-                    <Repeat className="h-5 w-5 mb-1" />
-                    <span className="text-sm">Exchange</span>
-                  </button>
-                </div>
+            <div className="mb-6">
+              <label className="block mb-2 text-amber-100">Transaction Type</label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center p-3 rounded-lg border ${
+                    formData.transactionType === "transfer"
+                      ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                      : "bg-gray-700/50 border-amber-500/10 text-amber-100/60 hover:bg-gray-700/70"
+                  }`}
+                  onClick={() => handleTransactionTypeChange("transfer")}
+                >
+                  <Send className="h-5 w-5 mb-1" />
+                  <span className="text-sm">Transfer</span>
+                </button>
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center p-3 rounded-lg border ${
+                    formData.transactionType === "payment"
+                      ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                      : "bg-gray-700/50 border-amber-500/10 text-amber-100/60 hover:bg-gray-700/70"
+                  }`}
+                  onClick={() => handleTransactionTypeChange("payment")}
+                >
+                  <ArrowDownLeft className="h-5 w-5 mb-1" />
+                  <span className="text-sm">Receive</span>
+                </button>
+                <button
+                  type="button"
+                  className={`flex flex-col items-center justify-center p-3 rounded-lg border ${
+                    formData.transactionType === "request"
+                      ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                      : "bg-gray-700/50 border-amber-500/10 text-amber-100/60 hover:bg-gray-700/70"
+                  }`}
+                  onClick={() => handleTransactionTypeChange("request")}
+                >
+                  <Repeat className="h-5 w-5 mb-1" />
+                  <span className="text-sm">Exchange</span>
+                </button>
               </div>
+            </div>
 
-              {/* Recipient field */}
-              <div>
-                <label htmlFor="accountNumber" className="block mb-2 text-amber-100">
-                  {formData.transactionType === "request" ? "Request From" : "Recipient"} Account Number
-                </label>
-                <input
-                  type="text"
-                  id="accountNumber"
-                  name="accountNumber"
-                  value={formData.accountNumber}
-                  onChange={handleChange}
-                  className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
-                  placeholder="Enter account number"
-                />
-              </div>
-
-              {/* Amount field */}
-              <div>
-                <label htmlFor="amount" className="block mb-2 text-amber-100">
-                  Amount ({userData.currency})
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-amber-100/60">$</span>
-                  </div>
+            {/* Transfer Money Form */}
+            {formData.transactionType === "transfer" && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Recipient field */}
+                <div>
+                  <label htmlFor="accountNumber" className="block mb-2 text-amber-100">
+                    Recipient Account Number
+                  </label>
                   <input
-                    type="number"
-                    id="amount"
-                    name="amount"
-                    value={formData.amount}
+                    type="text"
+                    id="accountNumber"
+                    name="accountNumber"
+                    value={formData.accountNumber}
                     onChange={handleChange}
-                    className="w-full bg-gray-700 rounded-lg pl-8 pr-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0"
+                    className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+                    placeholder="Enter account number"
                   />
                 </div>
-              </div>
 
-              {/* Description field */}
-              <div>
-                <label htmlFor="description" className="block mb-2 text-amber-100">
-                  Description (Optional)
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
-                  placeholder="Add a note about this transaction"
-                ></textarea>
-              </div>
+                {/* Amount field */}
+                <div>
+                  <label htmlFor="amount" className="block mb-2 text-amber-100">
+                    Amount ({userData.currency})
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-amber-100/60">$</span>
+                    </div>
+                    <input
+                      type="number"
+                      id="amount"
+                      name="amount"
+                      value={formData.amount}
+                      onChange={handleChange}
+                      className="w-full bg-gray-700 rounded-lg pl-8 pr-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                </div>
 
-              {/* Submit button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold rounded-lg hover:from-amber-400 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-300 flex items-center justify-center shadow-lg shadow-amber-900/20"
-              >
-                {isSubmitting ? (
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
+                {/* Description field */}
+                <div>
+                  <label htmlFor="description" className="block mb-2 text-amber-100">
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+                    placeholder="Add a note about this transaction"
+                  ></textarea>
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold rounded-lg hover:from-amber-400 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-300 flex items-center justify-center shadow-lg shadow-amber-900/20"
+                >
+                  {isSubmitting ? (
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    "Send Money"
+                  )}
+                </button>
+              </form>
+            )}
+
+            {/* Receive Money UI */}
+            {formData.transactionType === "payment" && (
+              <div className="space-y-6">
+                <div className="bg-gray-700/30 rounded-xl p-6 border border-amber-500/20">
+                  <div className="flex justify-center mb-6">
+                    <div className="w-32 h-32 bg-white p-2 rounded-lg">
+                      <QrCode className="w-full h-full text-gray-900" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
+                      <div>
+                        <p className="text-sm text-amber-100/60">Account Number</p>
+                        <p className="text-amber-100 font-medium">{userData.accountNumber}</p>
+                      </div>
+                      <button
+                        onClick={() => handleCopy(userData.accountNumber, "accountNumber")}
+                        className="p-2 bg-amber-500/10 rounded-lg hover:bg-amber-500/20 transition-colors"
+                      >
+                        {copiedText === "accountNumber" ? (
+                          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-5 w-5 text-amber-400" />
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
+                      <div>
+                        <p className="text-sm text-amber-100/60">Account Name</p>
+                        <p className="text-amber-100 font-medium">{userData.accountName}</p>
+                      </div>
+                      <button
+                        onClick={() => handleCopy(userData.accountName, "accountName")}
+                        className="p-2 bg-amber-500/10 rounded-lg hover:bg-amber-500/20 transition-colors"
+                      >
+                        {copiedText === "accountName" ? (
+                          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-5 w-5 text-amber-400" />
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
+                      <div>
+                        <p className="text-sm text-amber-100/60">Bank Name</p>
+                        <p className="text-amber-100 font-medium">{userData.bankName}</p>
+                      </div>
+                      <button
+                        onClick={() => handleCopy(userData.bankName, "bankName")}
+                        className="p-2 bg-amber-500/10 rounded-lg hover:bg-amber-500/20 transition-colors"
+                      >
+                        {copiedText === "bankName" ? (
+                          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-5 w-5 text-amber-400" />
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg">
+                      <div>
+                        <p className="text-sm text-amber-100/60">SWIFT/BIC Code</p>
+                        <p className="text-amber-100 font-medium">{userData.swiftCode}</p>
+                      </div>
+                      <button
+                        onClick={() => handleCopy(userData.swiftCode, "swiftCode")}
+                        className="p-2 bg-amber-500/10 rounded-lg hover:bg-amber-500/20 transition-colors"
+                      >
+                        {copiedText === "swiftCode" ? (
+                          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-5 w-5 text-amber-400" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      // In a real app, this would share account details
+                      setShowSuccess(true)
+                      setTimeout(() => setShowSuccess(false), 3000)
+                    }}
+                    className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold rounded-lg hover:from-amber-400 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-300 flex items-center justify-center shadow-lg shadow-amber-900/20"
                   >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                ) : (
-                  <>
-                    {formData.transactionType === "transfer" && "Send Money"}
-                    {formData.transactionType === "payment" && "Make Payment"}
-                    {formData.transactionType === "request" && "Request Money"}
-                  </>
-                )}
-              </button>
-            </form>
+                    <Share2 className="h-5 w-5 mr-2" />
+                    Share Account Details
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Currency Exchange UI */}
+            {formData.transactionType === "request" && (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="bg-gray-700/30 rounded-xl p-6 border border-amber-500/20">
+                  <div className="flex items-center justify-center mb-4">
+                    <ArrowLeftRight className="h-8 w-8 text-amber-400" />
+                  </div>
+
+                  {/* From Currency */}
+                  <div className="mb-4">
+                    <label className="block mb-2 text-amber-100">From</label>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <select
+                          name="fromCurrency"
+                          className="w-full bg-gray-700 rounded-lg px-3 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+                          defaultValue="USD"
+                        >
+                          <option value="USD">USD</option>
+                          <option value="NGN">NGN</option>
+                          <option value="GHS">GHS</option>
+                          <option value="KES">KES</option>
+                          <option value="ZAR">ZAR</option>
+                        </select>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="relative">
+                          <input
+                            type="number"
+                            name="fromAmount"
+                            className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+                            placeholder="0.00"
+                            step="0.01"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Exchange Rate */}
+                  <div className="flex justify-center items-center my-4">
+                    <div className="px-4 py-2 bg-amber-500/10 rounded-lg text-amber-400 text-sm">1 USD = 920 NGN</div>
+                  </div>
+
+                  {/* To Currency */}
+                  <div className="mb-4">
+                    <label className="block mb-2 text-amber-100">To</label>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <select
+                          name="toCurrency"
+                          className="w-full bg-gray-700 rounded-lg px-3 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+                          defaultValue="NGN"
+                        >
+                          <option value="NGN">NGN</option>
+                          <option value="USD">USD</option>
+                          <option value="GHS">GHS</option>
+                          <option value="KES">KES</option>
+                          <option value="ZAR">ZAR</option>
+                        </select>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="relative">
+                          <input
+                            type="number"
+                            name="toAmount"
+                            className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+                            placeholder="0.00"
+                            step="0.01"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fee information */}
+                  <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-amber-100/60">Exchange Fee</span>
+                      <span className="text-amber-100">$2.50</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-amber-100/60">Delivery Time</span>
+                      <span className="text-amber-100">Instant</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold rounded-lg hover:from-amber-400 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-300 flex items-center justify-center shadow-lg shadow-amber-900/20"
+                >
+                  {isSubmitting ? (
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    "Exchange Currency"
+                  )}
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
@@ -352,11 +632,35 @@ const formatCurrency = (amount: number): string => {
                       }`}
                     >
                       {transaction.type === "incoming" ? (
-                        <ArrowDownLeft className="h-5 w-5 text-emerald-500" />
+                        <ArrowDownLeft
+                          className={`h-5 w-5 ${
+                            transaction.type === "incoming"
+                              ? "text-emerald-500"
+                              : transaction.type === "outgoing"
+                                ? "text-red-500"
+                                : "text-amber-500"
+                          }`}
+                        />
                       ) : transaction.type === "outgoing" ? (
-                        <ArrowUpRight className="h-5 w-5 text-red-500" />
+                        <ArrowUpRight
+                          className={`h-5 w-5 ${
+                            transaction.type === "incoming"
+                              ? "text-emerald-500"
+                              : transaction.type === "outgoing"
+                                ? "text-red-500"
+                                : "text-amber-500"
+                          }`}
+                        />
                       ) : (
-                        <CreditCard className="h-5 w-5 text-amber-500" />
+                        <Repeat
+                          className={`h-5 w-5 ${
+                            transaction.type === "incoming"
+                              ? "text-emerald-500"
+                              : transaction.type === "outgoing"
+                                ? "text-red-500"
+                                : "text-amber-500"
+                          }`}
+                        />
                       )}
                     </div>
                     <div>
