@@ -71,8 +71,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   
     const refreshAccessToken = async () => {
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) {
+        const refresh = localStorage.getItem("refresh");
+        if (!refresh) {
           console.error("❌ [Auth] No refresh token available. Logging out...");
           logout();
           return false; 
@@ -83,7 +83,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ refresh: refreshToken }),
+          body: JSON.stringify({ refresh: refresh }),
         });
   
         const data = await res.json();
@@ -125,11 +125,11 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   localStorage.setItem("token", token);
   localStorage.setItem("balance", JSON.stringify(balance));
     localStorage.setItem("accNumber", accNumber);
-    localStorage.setItem("refreshToken", refresh);
+    localStorage.setItem("refresh", refresh);
 
-  // 👉 Save refreshToken as well if it's available
-  if (data.refreshToken) {
-    localStorage.setItem("refreshToken", data.refreshToken as string);
+  // 👉 Save refresh as well if it's available
+  if (data.refresh) {
+    localStorage.setItem("refresh", data.refresh as string);
   }
 };
 
@@ -142,7 +142,7 @@ const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("balance");
   localStorage.removeItem("accNumber");
-  localStorage.removeItem("refreshToken"); // clear it too
+  localStorage.removeItem("refresh"); // clear it too
   router.push("/"); 
   console.log("🔒 [Auth] User logged out successfully.");
 };

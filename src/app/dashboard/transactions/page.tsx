@@ -564,7 +564,7 @@ export default function TransactionsPage() {
                       <span className="text-amber-100/60">₦</span>
                     </div>
                     <input
-                      type="number"
+                      type="text"
                       id="amount"
                       name="amount"
                       value={formData.amount}
