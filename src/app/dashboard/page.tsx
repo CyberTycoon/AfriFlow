@@ -217,7 +217,7 @@ export default function Dashboard() {
           <div className="p-6">
             <div className="relative h-64 bg-gray-700/30 rounded-lg overflow-hidden mb-4">
               <Image
-                src="/placeholder.svg?height=400&width=600"
+                src="/trade-map.png"
                 alt="African trade map"
                 width={600}
                 height={400}

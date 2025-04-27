@@ -1,11 +1,12 @@
 'use client'
 
 import React, { createContext, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   userData: Record<string, unknown> | null;
   token: string | null;
-  login: (data: Record<string, unknown>, token: string, balance: number, accNumber: string) => void;
+  login: (data: Record<string, unknown>, token: string, refresh: string, balance: number, accNumber: string) => void;
   logout: () => void;
   setUserData: React.Dispatch<React.SetStateAction<Record<string, unknown> | null>>;
 }
@@ -13,6 +14,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const router = useRouter();
   const [userData, setUserData] = React.useState<Record<string, unknown> | null>(null);
   const [token, setToken] = React.useState<string | null>(null);
 
@@ -40,7 +42,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             Authorization: `Bearer ${token}`,
           },
         });
-        
+
         if (response.status === 401) {
           console.warn("⚠️ [Auth] Access token expired. Trying to refresh...");
           await refreshAccessToken();
@@ -71,7 +73,9 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
         if (!refreshToken) {
-          throw new Error("No refresh token found");
+          console.error("❌ [Auth] No refresh token available. Logging out...");
+          logout();
+          return false; 
         }
   
         const res = await fetch("/api/refresh", {
@@ -111,33 +115,38 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     }
   }, [userData]);
 
-  const login = (data: Record<string, unknown>, token: string, balance: number, accNumber: string) => {
-    const updatedUserData = { ...data, balance, accNumber };
-  
-    setUserData(updatedUserData);
-    setToken(token);
-  
-    localStorage.setItem("userData", JSON.stringify(updatedUserData));
-    localStorage.setItem("token", token);
-    localStorage.setItem("balance", JSON.stringify(balance));
-    localStorage.setItem("accNumber", accNumber);
-  
-    const refreshToken = data.refreshToken as string | undefined;
-    if (refreshToken) {
-      localStorage.setItem("refreshToken", refreshToken);
-    }
-  };
-  
+  const login = (data: Record<string, unknown>, token: string, refresh: string, balance: number, accNumber: string) => {
+  const updatedUserData = { ...data, balance, accNumber };
 
-  const logout = () => {
-    setUserData(null);
-    setToken(null);
-    localStorage.removeItem("userData");
-    localStorage.removeItem("token");
-    localStorage.removeItem("balance");   // 👈 Add
-    localStorage.removeItem("accNumber"); // 👈 Add
-    localStorage.removeItem("refreshToken"); // 👈 Add if you store it at login (best practice)
-  };
+  setUserData(updatedUserData);
+  setToken(token);
+
+  localStorage.setItem("userData", JSON.stringify(updatedUserData));
+  localStorage.setItem("token", token);
+  localStorage.setItem("balance", JSON.stringify(balance));
+    localStorage.setItem("accNumber", accNumber);
+    localStorage.setItem("refreshToken", refresh);
+
+  // 👉 Save refreshToken as well if it's available
+  if (data.refreshToken) {
+    localStorage.setItem("refreshToken", data.refreshToken as string);
+  }
+};
+
+
+const logout = () => {
+  setUserData(null);
+  setToken(null);
+
+  localStorage.removeItem("userData");
+  localStorage.removeItem("token");
+  localStorage.removeItem("balance");
+  localStorage.removeItem("accNumber");
+  localStorage.removeItem("refreshToken"); // clear it too
+  router.push("/"); 
+  console.log("🔒 [Auth] User logged out successfully.");
+};
+
   
 
   return (

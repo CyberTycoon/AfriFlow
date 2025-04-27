@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" })
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
  
   const loginUser = async () => {
     setErrorMessage(null);
@@ -95,7 +96,7 @@ export default function LoginPage() {
   
       setTimeout(() => {
         router.push("/dashboard");
-        login(tokenData, data.access, accountDetails.balance, accountDetails.wallet_number);
+        login(tokenData, data.access, data.refresh, accountDetails.balance, accountDetails.wallet_number);
         console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
       console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
         setIsLoading(false);
@@ -185,15 +186,24 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="block mb-2 text-amber-100">🔒 Password:</label>
-                <input
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  type="password"
-                  className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
-                  placeholder="********"
-                />
-              </div>
+  <label className="block mb-2 text-amber-100">🔒 Password:</label>
+  <div className="relative">
+    <input
+      value={formData.password}
+      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+      type={showPassword ? "text" : "password"}
+      className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+      placeholder="********"
+    />
+    <button
+      type="button"
+      onClick={() => setShowPassword((prev) => !prev)}
+      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-amber-100 focus:outline-none"
+    >
+      {showPassword ? "🙈" : "👁️"}
+    </button>
+  </div>
+</div>
 
               <div className="flex justify-between items-center">
                 <label className="flex items-center">
