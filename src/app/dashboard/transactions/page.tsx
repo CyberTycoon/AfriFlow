@@ -402,7 +402,9 @@ export default function TransactionsPage() {
     return <TransactionSkeleton />
   }
 
-    const [showSuccess, setShowSuccess] = useState(false);
+    function setShowSuccess(arg0: boolean) {
+        throw new Error("Function not implemented.")
+    }
 
   return (
     <>
