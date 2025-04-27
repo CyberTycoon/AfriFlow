@@ -43,8 +43,13 @@ export default function LoginPage() {
   
       const data = await response.json();
   
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || "Login failed. Please try again.");
+      }
+  
       console.log("📥 [Frontend] Login response:", data);
-
+  
+      // Fetch user info
       const getInfo = await fetch("/api/userInfo", {
         method: "GET",
         headers: {
@@ -52,34 +57,19 @@ export default function LoginPage() {
           Authorization: `Bearer ${data.access}`,
         },
       });
-      
       const tokenData = await getInfo.json();
       console.log("📥 [Frontend] User info response:", tokenData);
-
-      async function fetchUserAccountDetails(accessToken: string) {
-        try {
-          const res = await fetch("/api/userAccountDetails", {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${accessToken}`, // ✅ IMPORTANT
-              "Content-Type": "application/json",
-            },
-          });
-      
-          const data = await res.json();
-          console.log("📥 [Frontend] User account details response:", data);
-          return data;
-        } catch (error) {
-          console.error("❌ [Frontend] Failed to fetch user account details:", error);
-          return null;
-        }
-      }
-      
-      const accountDetails = await fetchUserAccountDetails(data.access);
-      console.log("📥 [Frontend] User account details:", accountDetails);
-
-      login(tokenData, data.access);
-      console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
+  
+      // Fetch user account details
+      const getAccountDetails = await fetch("/api/userAccount", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.access}`,
+        },
+      });
+      const accountDetails = await getAccountDetails.json();
+      console.log("📥 [Frontend] User account details response:", accountDetails);
       // Store user data and token in context
   
       if (!response.ok) {
@@ -105,7 +95,8 @@ export default function LoginPage() {
   
       setTimeout(() => {
         router.push("/dashboard");
-        login(tokenData, data.access);
+        login(tokenData, data.access, accountDetails.balance, accountDetails.wallet_number);
+        console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
       console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
         setIsLoading(false);
       }, 2000);

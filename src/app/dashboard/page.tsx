@@ -9,10 +9,11 @@ import { AuthContext } from "@/app/context/AuthContext"
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const auth = useContext(AuthContext)
-  const userData = (auth?.userData as { full_name?: string; email?: string }) || {}
+  const userData = (auth?.userData as { full_name?: string; email?: string; balance?: number}) || {}
   const userName = userData.full_name || "User"
-
+  const balance = userData.balance || 0
   useEffect(() => {
+
     // Simulate loading delay
     const timer = setTimeout(() => {
       setIsLoading(false)
@@ -39,7 +40,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-amber-100/60 text-sm">Total Balance</p>
-              <h3 className="text-2xl font-bold text-amber-100">$24,568.80</h3>
+              <h3 className="text-2xl font-bold text-amber-100">₦{ balance}</h3>
             </div>
             <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center">
               <svg
@@ -78,7 +79,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center text-sm">
-            <span className="text-amber-400 flex items-center">$12,350.00</span>
+            <span className="text-amber-400 flex items-center">₦12,350.00</span>
             <span className="text-amber-100/40 ml-2">total value</span>
           </div>
         </div>
@@ -139,7 +140,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-emerald-400">+$5,240.00</p>
+                  <p className="font-medium text-emerald-400">+₦5,240.00</p>
                   <p className="text-xs text-amber-100/60">Completed</p>
                 </div>
               </div>
@@ -156,7 +157,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-red-400">-$3,180.00</p>
+                  <p className="font-medium text-red-400">-₦3,180.00</p>
                   <p className="text-xs text-amber-100/60">Completed</p>
                 </div>
               </div>
@@ -173,7 +174,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-amber-400">$2,000 → ₦1,840,000</p>
+                  <p className="font-medium text-amber-400">₦2,000 → ₦1,840,000</p>
                   <p className="text-xs text-amber-100/60">Completed</p>
                 </div>
               </div>
@@ -190,7 +191,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-emerald-400">+$4,750.00</p>
+                  <p className="font-medium text-emerald-400">+₦4,750.00</p>
                   <p className="text-xs text-amber-100/60">Completed</p>
                 </div>
               </div>
@@ -254,7 +255,7 @@ export default function Dashboard() {
               </p>
               <div className="space-y-2">
                 <div className="bg-gray-700/50 rounded-lg px-4 py-2 text-sm text-amber-100/80">
-                  "Send $2,000 to KenyaExport"
+                  "Send ₦2,000 to KenyaExport"
                 </div>
                 <div className="bg-gray-700/50 rounded-lg px-4 py-2 text-sm text-amber-100/80">
                   "Check compliance requirements for exporting to Ghana"

@@ -6,7 +6,6 @@ import { useState, useEffect, useContext} from "react"
 import {
   ArrowUpRight,
   ArrowDownLeft,
-  DollarSign,
   Send,
   AlertCircle,
   CheckCircle2,
@@ -19,17 +18,37 @@ import {
 import TransactionSkeleton from "@/app/components/skeletons/transaction-skeleton"
 import {AuthContext} from "@/app/context/AuthContext"
 
+// Define transaction type as a proper TypeScript type
+type TransactionType = "incoming" | "outgoing" | "exchange"
+
+// Define transaction interface
+interface Transaction {
+  id: number
+  type: TransactionType
+  name: string
+  date: string
+  time: string
+  amount: number
+  status: string
+  details?: string
+}
+
+// Define form transaction type
+type FormTransactionType = "transfer" | "payment" | "request"
+
 export default function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState(false)
-    const [copiedText, setCopiedText] = useState<string | null>(null)
-    const auth = useContext(AuthContext)
-    const user = (auth?.userData as { full_name?: string; email?: string }) || {}
-  // Form state
+  const [copiedText, setCopiedText] = useState<string | null>(null)
+  const auth = useContext(AuthContext)
+    const user = (auth?.userData as { full_name?: string; email?: string; balance?: number; accNumber?: string; }) || {}
+    const balance = user.balance || 0
+    const accNumber = user.accNumber || 'acc_no'
+  // Form state with proper typing
   const [formData, setFormData] = useState({
-    transactionType: "transfer",
+    transactionType: "transfer" as FormTransactionType,
     accountNumber: "",
     amount: "",
     description: "",
@@ -37,16 +56,16 @@ export default function TransactionsPage() {
 
   // Mock user data
   const userData = {
-    balance: 24568.8,
-    currency: "USD",
-    accountNumber: "2458-7896-3214-0067",
+    balance: balance,
+    currency: "NGN",
+    accountNumber: accNumber,
     accountName: user.full_name,
     bankName: "AfriFlow Bank",
     swiftCode: "AFBNIGLA",
     recentTransactions: [
       {
         id: 1,
-        type: "incoming",
+        type: "incoming" as TransactionType,
         name: "KenyaExport",
         date: "Apr 18, 2024",
         time: "10:24 AM",
@@ -55,7 +74,7 @@ export default function TransactionsPage() {
       },
       {
         id: 2,
-        type: "outgoing",
+        type: "outgoing" as TransactionType,
         name: "GhanaConnect",
         date: "Apr 16, 2024",
         time: "2:38 PM",
@@ -64,7 +83,7 @@ export default function TransactionsPage() {
       },
       {
         id: 3,
-        type: "exchange",
+        type: "exchange" as TransactionType,
         name: "Currency Exchange",
         date: "Apr 15, 2024",
         time: "9:12 AM",
@@ -74,14 +93,14 @@ export default function TransactionsPage() {
       },
       {
         id: 4,
-        type: "incoming",
+        type: "incoming" as TransactionType,
         name: "SenegalShip",
         date: "Apr 12, 2024",
         time: "4:45 PM",
         amount: 4750.0,
         status: "Completed",
       },
-    ],
+    ] as Transaction[],
     // Mock exchange rates
     exchangeRates: {
       USD: {
@@ -147,7 +166,7 @@ export default function TransactionsPage() {
     })
   }
 
-  const handleTransactionTypeChange = (type: string) => {
+  const handleTransactionTypeChange = (type: FormTransactionType) => {
     setFormData({
       ...formData,
       transactionType: type,
@@ -193,6 +212,30 @@ export default function TransactionsPage() {
     }).format(amount)
   }
 
+  // Helper function to get transaction type-specific CSS classes and icons
+  const getTransactionAppearance = (type: TransactionType) => {
+    switch (type) {
+      case "incoming":
+        return {
+          bgColor: "bg-emerald-500/20",
+          textColor: "text-emerald-500",
+          icon: <ArrowDownLeft className="h-5 w-5 text-emerald-500" />
+        };
+      case "outgoing":
+        return {
+          bgColor: "bg-red-500/20",
+          textColor: "text-red-500",
+          icon: <ArrowUpRight className="h-5 w-5 text-red-500" />
+        };
+      case "exchange":
+        return {
+          bgColor: "bg-amber-500/20",
+          textColor: "text-amber-500",
+          icon: <Repeat className="h-5 w-5 text-amber-500" />
+        };
+    }
+  };
+
   if (isLoading) {
     return <TransactionSkeleton />
   }
@@ -232,10 +275,10 @@ export default function TransactionsPage() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-amber-100/60 text-sm mb-1">Available Balance</p>
-              <h2 className="text-3xl font-bold text-amber-100">{formatCurrency(userData.balance)}</h2>
+              <h2 className="text-3xl font-bold text-amber-100">₦ {userData.balance}</h2>
             </div>
             <div className="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-amber-500" />
+            
             </div>
           </div>
         </div>
@@ -422,7 +465,7 @@ export default function TransactionsPage() {
                         <p className="text-amber-100 font-medium">{userData.accountName}</p>
                       </div>
                       <button
-                        onClick={() => handleCopy(userData.accountName, "accountName")}
+                        onClick={() => handleCopy(userData.accountName || "", "accountName")}
                         className="p-2 bg-amber-500/10 rounded-lg hover:bg-amber-500/20 transition-colors"
                       >
                         {copiedText === "accountName" ? (
@@ -616,78 +659,37 @@ export default function TransactionsPage() {
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {userData.recentTransactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors"
-                >
-                  <div className="flex items-center">
-                    <div
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${
-                        transaction.type === "incoming"
-                          ? "bg-emerald-500/20"
-                          : transaction.type === "outgoing"
-                            ? "bg-red-500/20"
-                            : "bg-amber-500/20"
-                      }`}
-                    >
-                      {transaction.type === "incoming" ? (
-                        <ArrowDownLeft
-                          className={`h-5 w-5 ${
-                            transaction.type === "incoming"
-                              ? "text-emerald-500"
-                              : transaction.type === "outgoing"
-                                ? "text-red-500"
-                                : "text-amber-500"
-                          }`}
-                        />
-                      ) : transaction.type === "outgoing" ? (
-                        <ArrowUpRight
-                          className={`h-5 w-5 ${
-                            transaction.type === "incoming"
-                              ? "text-emerald-500"
-                              : transaction.type === "outgoing"
-                                ? "text-red-500"
-                                : "text-amber-500"
-                          }`}
-                        />
-                      ) : (
-                        <Repeat
-                          className={`h-5 w-5 ${
-                            transaction.type === "incoming"
-                              ? "text-emerald-500"
-                              : transaction.type === "outgoing"
-                                ? "text-red-500"
-                                : "text-amber-500"
-                          }`}
-                        />
-                      )}
+              {userData.recentTransactions.map((transaction) => {
+                // Get the appropriate appearance for this transaction type
+                const appearance = getTransactionAppearance(transaction.type);
+                
+                return (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${appearance.bgColor}`}>
+                        {appearance.icon}
+                      </div>
+                      <div>
+                        <p className="font-medium text-amber-100">{transaction.name}</p>
+                        <p className="text-xs text-amber-100/60">
+                          {transaction.date} • {transaction.time}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-amber-100">{transaction.name}</p>
-                      <p className="text-xs text-amber-100/60">
-                        {transaction.date} • {transaction.time}
+                    <div className="text-right">
+                      <p className={`font-medium ${transaction.type === "incoming" ? "text-emerald-400" : transaction.type === "outgoing" ? "text-red-400" : "text-amber-400"}`}>
+                        {transaction.type === "incoming" ? "+" : transaction.type === "outgoing" ? "-" : ""}
+                        {formatCurrency(transaction.amount)}
+                        {transaction.details && <span className="text-xs ml-1">{transaction.details}</span>}
                       </p>
+                      <p className="text-xs text-amber-100/60">{transaction.status}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p
-                      className={`font-medium ${
-                        transaction.type === "incoming"
-                          ? "text-emerald-400"
-                          : transaction.type === "outgoing"
-                            ? "text-red-400"
-                            : "text-amber-400"
-                      }`}
-                    >
-                      {transaction.type === "incoming" ? "+" : transaction.type === "outgoing" ? "-" : ""}
-                      {formatCurrency(transaction.amount)}
-                      {transaction.details && <span className="text-xs ml-1">{transaction.details}</span>}
-                    </p>
-                    <p className="text-xs text-amber-100/60">{transaction.status}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="mt-4 text-center">
               <button className="text-amber-400 text-sm hover:underline">View all transactions</button>
