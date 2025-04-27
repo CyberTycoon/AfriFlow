@@ -2,10 +2,11 @@
 
 import type React from "react"
 
-import { useState, useEffect, useContext} from "react"
+import { useState, useEffect, useContext } from "react"
 import {
   ArrowUpRight,
   ArrowDownLeft,
+  DollarSign,
   Send,
   AlertCircle,
   CheckCircle2,
@@ -14,9 +15,10 @@ import {
   QrCode,
   Share2,
   ArrowLeftRight,
+  Lock,
 } from "lucide-react"
 import TransactionSkeleton from "@/app/components/skeletons/transaction-skeleton"
-import {AuthContext} from "@/app/context/AuthContext"
+import { AuthContext } from "@/app/context/AuthContext"
 
 // Define transaction type as a proper TypeScript type
 type TransactionType = "incoming" | "outgoing" | "exchange"
@@ -41,11 +43,20 @@ export default function TransactionsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("Please fill in all required fields.")
   const [copiedText, setCopiedText] = useState<string | null>(null)
+  const [recipientName, setRecipientName] = useState<string | null>(null)
+  const [verifying, setVerifying] = useState(false)
+  const [verified, setVerified] = useState(false)
+  const [showPinInput, setShowPinInput] = useState(false)
+  const [pin, setPin] = useState("")
+
   const auth = useContext(AuthContext)
-    const user = (auth?.userData as { full_name?: string; email?: string; balance?: number; accNumber?: string; }) || {}
-    const balance = user.balance || 0
-    const accNumber = user.accNumber || 'acc_no'
+  const user = (auth?.userData as { full_name?: string; email?: string; balance?: number; accNumber?: string }) || {}
+  const balance = user.balance || 24568.8
+  const accNumber = user.accNumber || "2458-7896-3214-0067"
+  const token = auth?.token || null
+
   // Form state with proper typing
   const [formData, setFormData] = useState({
     transactionType: "transfer" as FormTransactionType,
@@ -59,7 +70,7 @@ export default function TransactionsPage() {
     balance: balance,
     currency: "NGN",
     accountNumber: accNumber,
-    accountName: user.full_name,
+    accountName: user.full_name || "Adeola Johnson",
     bankName: "AfriFlow Bank",
     swiftCode: "AFBNIGLA",
     recentTransactions: [
@@ -101,39 +112,6 @@ export default function TransactionsPage() {
         status: "Completed",
       },
     ] as Transaction[],
-    // Mock exchange rates
-    exchangeRates: {
-      USD: {
-        NGN: 920,
-        GHS: 12.5,
-        KES: 130.75,
-        ZAR: 18.6,
-      },
-      NGN: {
-        USD: 0.00109,
-        GHS: 0.0136,
-        KES: 0.142,
-        ZAR: 0.0202,
-      },
-      GHS: {
-        USD: 0.08,
-        NGN: 73.6,
-        KES: 10.46,
-        ZAR: 1.49,
-      },
-      KES: {
-        USD: 0.00765,
-        NGN: 7.03,
-        GHS: 0.0956,
-        ZAR: 0.142,
-      },
-      ZAR: {
-        USD: 0.0538,
-        NGN: 49.46,
-        GHS: 0.672,
-        KES: 7.03,
-      },
-    },
   }
 
   useEffect(() => {
@@ -144,6 +122,15 @@ export default function TransactionsPage() {
 
     return () => clearTimeout(timer)
   }, [])
+
+  // Reset verification when account number changes
+  useEffect(() => {
+    if (formData.accountNumber) {
+      setVerified(false)
+      setRecipientName(null)
+      setShowPinInput(false)
+    }
+  }, [formData.accountNumber])
 
   // Handle copy to clipboard
   const handleCopy = (text: string, type: string) => {
@@ -164,6 +151,17 @@ export default function TransactionsPage() {
       ...formData,
       [name]: value,
     })
+
+    // Reset verification when account number changes
+    if (name === "accountNumber") {
+      setVerified(false)
+      setRecipientName(null)
+      setShowPinInput(false)
+    }
+  }
+
+  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPin(e.target.value)
   }
 
   const handleTransactionTypeChange = (type: FormTransactionType) => {
@@ -171,44 +169,183 @@ export default function TransactionsPage() {
       ...formData,
       transactionType: type,
     })
+    setVerified(false)
+    setRecipientName(null)
+    setShowPinInput(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    // Different validation based on transaction type
-    if (formData.transactionType === "transfer" && (!formData.accountNumber || !formData.amount)) {
+  // Update the verifyRecipient function to use the existing API route
+  const verifyRecipient = async () => {
+    if (!formData.accountNumber) {
       setShowError(true)
-      setIsSubmitting(false)
+      setErrorMessage("Please enter an account number")
       setTimeout(() => setShowError(false), 3000)
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setShowSuccess(true)
+    if (!formData.amount || Number.parseFloat(formData.amount) <= 0) {
+      setShowError(true)
+      setErrorMessage("Please enter a valid amount")
+      setTimeout(() => setShowError(false), 3000)
+      return
+    }
 
-      // Reset form based on transaction type
-      if (formData.transactionType === "transfer") {
+    if (!token) {
+      setShowError(true)
+      setErrorMessage("Authentication required")
+      setTimeout(() => setShowError(false), 3000)
+      return
+    }
+
+    setVerifying(true)
+
+    try {
+      const response = await fetch("/api/transfer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          step: "verify",
+          recipient_wallet_number: formData.accountNumber,
+          amount: Number.parseFloat(formData.amount) || 0,
+        }),
+      })
+
+      const data = await response.json()
+      setVerifying(false)
+
+      if (response.ok) {
+        console.log("Recipient Name:", data.recipient_name)
+        setRecipientName(data.recipient_name)
+        setVerified(true)
+        setShowPinInput(true)
+      } else {
+        setShowError(true)
+        setErrorMessage(data.error || "Verification failed")
+        setTimeout(() => setShowError(false), 3000)
+      }
+    } catch (error) {
+      setVerifying(false)
+      console.error("❌ Error verifying recipient:", error)
+      setShowError(true)
+      setErrorMessage("Failed to verify recipient. Please try again.")
+      setTimeout(() => setShowError(false), 3000)
+    }
+  }
+
+  // Update the processTransfer function to use the existing API route
+  const processTransfer = async () => {
+    if (!pin || pin.length !== 4) {
+      setShowError(true)
+      setErrorMessage("Please enter a valid 4-digit PIN")
+      setTimeout(() => setShowError(false), 3000)
+      return
+    }
+
+    if (!token) {
+      setShowError(true)
+      setErrorMessage("Authentication required")
+      setTimeout(() => setShowError(false), 3000)
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch("/api/transfer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          step: "transfer",
+          recipient_wallet_number: formData.accountNumber,
+          amount: Number.parseFloat(formData.amount),
+          description: formData.description || "Transfer",
+          pin: pin,
+        }),
+      })
+
+      const data = await response.json()
+      setIsSubmitting(false)
+
+      if (response.ok) {
+        setShowSuccess(true)
+        // Update user balance if returned in the response
+        if (data.balance && auth?.setUserData) {
+          auth.setUserData({
+            ...user,
+            balance: data.balance,
+          })
+        }
+        // Reset form
         setFormData({
           ...formData,
           accountNumber: "",
           amount: "",
           description: "",
         })
+        setVerified(false)
+        setRecipientName(null)
+        setShowPinInput(false)
+        setPin("")
+        setTimeout(() => setShowSuccess(false), 3000)
+      } else {
+        setShowError(true)
+        setErrorMessage(data.error || "Transfer failed")
+        setTimeout(() => setShowError(false), 3000)
+      }
+    } catch (error) {
+      setIsSubmitting(false)
+      console.error("❌ Error processing transfer:", error)
+      setShowError(true)
+      setErrorMessage("Failed to process transfer. Please try again.")
+      setTimeout(() => setShowError(false), 3000)
+    }
+  }
+
+  // Update the handleSubmit function to handle the two-step process
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Different validation based on transaction type
+    if (formData.transactionType === "transfer") {
+      if (!formData.accountNumber || !formData.amount) {
+        setShowError(true)
+        setErrorMessage("Please fill in all required fields")
+        setTimeout(() => setShowError(false), 3000)
+        return
       }
 
-      // Hide success message after 3 seconds
+      if (!verified) {
+        // Step 1: Verify recipient
+        verifyRecipient()
+        return
+      }
+
+      if (verified && showPinInput) {
+        // Step 2: Process the transfer with PIN
+        processTransfer()
+        return
+      }
+    }
+
+    // Handle other transaction types
+    setIsSubmitting(true)
+    setTimeout(() => {
+      setIsSubmitting(false)
+      setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
     }, 1500)
   }
 
   const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-NG", {
       style: "currency",
-      currency: "USD",
+      currency: "NGN",
     }).format(amount)
   }
 
@@ -219,22 +356,22 @@ export default function TransactionsPage() {
         return {
           bgColor: "bg-emerald-500/20",
           textColor: "text-emerald-500",
-          icon: <ArrowDownLeft className="h-5 w-5 text-emerald-500" />
-        };
+          icon: <ArrowDownLeft className="h-5 w-5 text-emerald-500" />,
+        }
       case "outgoing":
         return {
           bgColor: "bg-red-500/20",
           textColor: "text-red-500",
-          icon: <ArrowUpRight className="h-5 w-5 text-red-500" />
-        };
+          icon: <ArrowUpRight className="h-5 w-5 text-red-500" />,
+        }
       case "exchange":
         return {
           bgColor: "bg-amber-500/20",
           textColor: "text-amber-500",
-          icon: <Repeat className="h-5 w-5 text-amber-500" />
-        };
+          icon: <Repeat className="h-5 w-5 text-amber-500" />,
+        }
     }
-  };
+  }
 
   if (isLoading) {
     return <TransactionSkeleton />
@@ -247,13 +384,13 @@ export default function TransactionsPage() {
         <p className="text-amber-100/60">Send money, make payments, and manage your transactions.</p>
       </div>
 
-      {/* Success and error messages */}
+      {/* Update the success message to show the actual transaction details */}
       {showSuccess && (
         <div className="mb-6 bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-4 flex items-center text-emerald-400">
           <CheckCircle2 className="h-5 w-5 mr-2" />
           <span>
             {formData.transactionType === "transfer"
-              ? "Transaction completed successfully!"
+              ? `Transaction completed successfully!`
               : formData.transactionType === "payment"
                 ? "Account details copied successfully!"
                 : "Currency exchange completed successfully!"}
@@ -264,7 +401,7 @@ export default function TransactionsPage() {
       {showError && (
         <div className="mb-6 bg-red-500/20 border border-red-500/30 rounded-lg p-4 flex items-center text-red-400">
           <AlertCircle className="h-5 w-5 mr-2" />
-          <span>Please fill in all required fields.</span>
+          <span>{errorMessage}</span>
         </div>
       )}
 
@@ -275,10 +412,10 @@ export default function TransactionsPage() {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-amber-100/60 text-sm mb-1">Available Balance</p>
-              <h2 className="text-3xl font-bold text-amber-100">₦ {userData.balance}</h2>
+              <h2 className="text-3xl font-bold text-amber-100">{formatCurrency(userData.balance)}</h2>
             </div>
             <div className="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center">
-            
+              <DollarSign className="h-6 w-6 text-amber-500" />
             </div>
           </div>
         </div>
@@ -339,7 +476,7 @@ export default function TransactionsPage() {
               </div>
             </div>
 
-            {/* Transfer Money Form */}
+            {/* Update the Transfer Money Form to include a confirmation step and PIN input */}
             {formData.transactionType === "transfer" && (
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Recipient field */}
@@ -347,15 +484,28 @@ export default function TransactionsPage() {
                   <label htmlFor="accountNumber" className="block mb-2 text-amber-100">
                     Recipient Account Number
                   </label>
-                  <input
-                    type="text"
-                    id="accountNumber"
-                    name="accountNumber"
-                    value={formData.accountNumber}
-                    onChange={handleChange}
-                    className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
-                    placeholder="Enter account number"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="accountNumber"
+                      name="accountNumber"
+                      value={formData.accountNumber}
+                      onChange={handleChange}
+                      className={`w-full bg-gray-700 rounded-lg px-4 py-3 border ${
+                        verified ? "border-emerald-500/40" : "border-amber-500/20"
+                      } focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100`}
+                      placeholder="Enter account number"
+                      disabled={verified}
+                    />
+                    {verified && recipientName && (
+                      <div className="absolute right-3 top-3">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                      </div>
+                    )}
+                  </div>
+                  {verified && recipientName && (
+                    <p className="mt-2 text-sm text-emerald-400">Sending to: {recipientName}</p>
+                  )}
                 </div>
 
                 {/* Amount field */}
@@ -365,7 +515,7 @@ export default function TransactionsPage() {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-amber-100/60">$</span>
+                      <span className="text-amber-100/60">₦</span>
                     </div>
                     <input
                       type="number"
@@ -377,6 +527,7 @@ export default function TransactionsPage() {
                       placeholder="0.00"
                       step="0.01"
                       min="0"
+                      disabled={verified}
                     />
                   </div>
                 </div>
@@ -394,38 +545,71 @@ export default function TransactionsPage() {
                     rows={3}
                     className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
                     placeholder="Add a note about this transaction"
+                    disabled={verified && showPinInput}
                   ></textarea>
                 </div>
+
+                {/* PIN input field - only shown after verification */}
+                {verified && showPinInput && (
+                  <div className="mt-4">
+                    <label htmlFor="pin" className="block mb-2 text-amber-100">
+                      Enter your 4-digit PIN
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-4 w-4 text-amber-100/60" />
+                      </div>
+                      <input
+                        type="password"
+                        id="pin"
+                        name="pin"
+                        value={pin}
+                        onChange={handlePinChange}
+                        className="w-full bg-gray-700 rounded-lg pl-10 pr-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+                        placeholder="****"
+                        maxLength={4}
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-amber-100/60">Enter your PIN to authorize this transaction</p>
+                  </div>
+                )}
 
                 {/* Submit button */}
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || verifying}
                   className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 font-semibold rounded-lg hover:from-amber-400 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-300 flex items-center justify-center shadow-lg shadow-amber-900/20"
                 >
-                  {isSubmitting ? (
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
+                  {isSubmitting || verifying ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-900"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      {verifying ? "Verifying..." : "Processing..."}
+                    </>
+                  ) : verified && showPinInput ? (
+                    "Confirm Transfer"
                   ) : (
-                    "Send Money"
+                    "Verify Recipient"
                   )}
                 </button>
               </form>
@@ -661,15 +845,17 @@ export default function TransactionsPage() {
             <div className="space-y-4">
               {userData.recentTransactions.map((transaction) => {
                 // Get the appropriate appearance for this transaction type
-                const appearance = getTransactionAppearance(transaction.type);
-                
+                const appearance = getTransactionAppearance(transaction.type)
+
                 return (
                   <div
                     key={transaction.id}
                     className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors"
                   >
                     <div className="flex items-center">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${appearance.bgColor}`}>
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${appearance.bgColor}`}
+                      >
                         {appearance.icon}
                       </div>
                       <div>
@@ -680,7 +866,9 @@ export default function TransactionsPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`font-medium ${transaction.type === "incoming" ? "text-emerald-400" : transaction.type === "outgoing" ? "text-red-400" : "text-amber-400"}`}>
+                      <p
+                        className={`font-medium ${transaction.type === "incoming" ? "text-emerald-400" : transaction.type === "outgoing" ? "text-red-400" : "text-amber-400"}`}
+                      >
                         {transaction.type === "incoming" ? "+" : transaction.type === "outgoing" ? "-" : ""}
                         {formatCurrency(transaction.amount)}
                         {transaction.details && <span className="text-xs ml-1">{transaction.details}</span>}
@@ -688,7 +876,7 @@ export default function TransactionsPage() {
                       <p className="text-xs text-amber-100/60">{transaction.status}</p>
                     </div>
                   </div>
-                );
+                )
               })}
             </div>
             <div className="mt-4 text-center">
