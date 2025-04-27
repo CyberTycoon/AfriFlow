@@ -16,6 +16,7 @@ import {
   Share2,
   ArrowLeftRight,
   Lock,
+  X
 } from "lucide-react"
 import TransactionSkeleton from "@/app/components/skeletons/transaction-skeleton"
 import { AuthContext } from "@/app/context/AuthContext"
@@ -38,11 +39,20 @@ interface Transaction {
 // Define form transaction type
 type FormTransactionType = "transfer" | "payment" | "request"
 
+// Define toast type
+type ToastType = "success" | "error" | "info"
+
+// Define toast interface
+interface Toast {
+  id: number
+  type: ToastType
+  message: string
+}
+
 export default function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
-  const [showError, setShowError] = useState(false)
+  const [toasts, setToasts] = useState<Toast[]>([])
   const [errorMessage, setErrorMessage] = useState("Please fill in all required fields.")
   const [copiedText, setCopiedText] = useState<string | null>(null)
   const [recipientName, setRecipientName] = useState<string | null>(null)
@@ -123,6 +133,21 @@ export default function TransactionsPage() {
     return () => clearTimeout(timer)
   }, [])
 
+  // Show toast notification
+  const showToast = (type: ToastType, message: string) => {
+    const id = Date.now()
+    setToasts(prev => [...prev, { id, type, message }])
+    // Auto-remove toast after 5 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(toast => toast.id !== id))
+    }, 5000)
+  }
+
+  // Remove toast
+  const removeToast = (id: number) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id))
+  }
+
   // Reset verification when account number changes
   useEffect(() => {
     if (formData.accountNumber) {
@@ -177,23 +202,17 @@ export default function TransactionsPage() {
   // Update the verifyRecipient function to use the existing API route
   const verifyRecipient = async () => {
     if (!formData.accountNumber) {
-      setShowError(true)
-      setErrorMessage("Please enter an account number")
-      setTimeout(() => setShowError(false), 3000)
+      showToast("error", "Please enter an account number")
       return
     }
 
     if (!formData.amount || Number.parseFloat(formData.amount) <= 0) {
-      setShowError(true)
-      setErrorMessage("Please enter a valid amount")
-      setTimeout(() => setShowError(false), 3000)
+      showToast("error", "Please enter a valid amount")
       return
     }
 
     if (!token) {
-      setShowError(true)
-      setErrorMessage("Authentication required")
-      setTimeout(() => setShowError(false), 3000)
+      showToast("error", "Authentication required")
       return
     }
 
@@ -221,33 +240,32 @@ export default function TransactionsPage() {
         setRecipientName(data.recipient_name)
         setVerified(true)
         setShowPinInput(true)
+        showToast("success", `Recipient verified: ${data.recipient_name}`)
       } else {
-        setShowError(true)
-        setErrorMessage(data.error || "Verification failed")
-        setTimeout(() => setShowError(false), 3000)
+        showToast("error", data.error || "Verification failed")
       }
     } catch (error) {
       setVerifying(false)
       console.error("❌ Error verifying recipient:", error)
-      setShowError(true)
-      setErrorMessage("Failed to verify recipient. Please try again.")
-      setTimeout(() => setShowError(false), 3000)
+      showToast("error", "Failed to verify recipient. Please try again.")
     }
   }
 
   // Update the processTransfer function to use the existing API route
   const processTransfer = async () => {
     if (!pin || pin.length !== 4) {
-      setShowError(true)
-      setErrorMessage("Please enter a valid 4-digit PIN")
-      setTimeout(() => setShowError(false), 3000)
+      showToast("error", "Please enter a valid 4-digit PIN")
       return
     }
 
     if (!token) {
-      setShowError(true)
-      setErrorMessage("Authentication required")
-      setTimeout(() => setShowError(false), 3000)
+      showToast("error", "Authentication required")
+      return
+    }
+
+    // Check if amount is greater than balance
+    if (Number(formData.amount) > userData.balance) {
+      showToast("error", "Insufficient funds. Please enter a lower amount.")
       return
     }
 
@@ -273,7 +291,8 @@ export default function TransactionsPage() {
       setIsSubmitting(false)
 
       if (response.ok) {
-        setShowSuccess(true)
+        showToast("success", `Successfully transferred ${formatCurrency(Number(formData.amount))} to ${recipientName || "recipient"}!`)
+        
         // Update user balance if returned in the response
         if (data.balance && auth?.setUserData) {
           auth.setUserData({
@@ -292,18 +311,23 @@ export default function TransactionsPage() {
         setRecipientName(null)
         setShowPinInput(false)
         setPin("")
-        setTimeout(() => setShowSuccess(false), 3000)
       } else {
-        setShowError(true)
-        setErrorMessage(data.error || "Transfer failed")
-        setTimeout(() => setShowError(false), 3000)
+        // Handle specific error types
+        if (data.error && data.error.toLowerCase().includes("pin")) {
+          showToast("error", "Invalid PIN. Please try again.")
+        } else if (
+          (data.error && data.error.toLowerCase().includes("balance")) ||
+          (data.error && data.error.toLowerCase().includes("insufficient"))
+        ) {
+          showToast("error", "Insufficient funds. Please enter a lower amount.")
+        } else {
+          showToast("error", data.error || "Transfer failed")
+        }
       }
     } catch (error) {
       setIsSubmitting(false)
       console.error("❌ Error processing transfer:", error)
-      setShowError(true)
-      setErrorMessage("Failed to process transfer. Please try again.")
-      setTimeout(() => setShowError(false), 3000)
+      showToast("error", "Failed to process transfer. Please try again.")
     }
   }
 
@@ -314,9 +338,7 @@ export default function TransactionsPage() {
     // Different validation based on transaction type
     if (formData.transactionType === "transfer") {
       if (!formData.accountNumber || !formData.amount) {
-        setShowError(true)
-        setErrorMessage("Please fill in all required fields")
-        setTimeout(() => setShowError(false), 3000)
+        showToast("error", "Please fill in all required fields")
         return
       }
 
@@ -337,8 +359,11 @@ export default function TransactionsPage() {
     setIsSubmitting(true)
     setTimeout(() => {
       setIsSubmitting(false)
-      setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
+      if (formData.transactionType === "payment") {
+        showToast("success", "Account details copied successfully!")
+      } else {
+        showToast("success", "Currency exchange completed successfully!")
+      }
     }, 1500)
   }
 
@@ -377,6 +402,8 @@ export default function TransactionsPage() {
     return <TransactionSkeleton />
   }
 
+    const [showSuccess, setShowSuccess] = useState(false);
+
   return (
     <>
       <div className="mb-8">
@@ -384,26 +411,41 @@ export default function TransactionsPage() {
         <p className="text-amber-100/60">Send money, make payments, and manage your transactions.</p>
       </div>
 
-      {/* Update the success message to show the actual transaction details */}
-      {showSuccess && (
-        <div className="mb-6 bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-4 flex items-center text-emerald-400">
-          <CheckCircle2 className="h-5 w-5 mr-2" />
-          <span>
-            {formData.transactionType === "transfer"
-              ? `Transaction completed successfully!`
-              : formData.transactionType === "payment"
-                ? "Account details copied successfully!"
-                : "Currency exchange completed successfully!"}
-          </span>
-        </div>
-      )}
-
-      {showError && (
-        <div className="mb-6 bg-red-500/20 border border-red-500/30 rounded-lg p-4 flex items-center text-red-400">
-          <AlertCircle className="h-5 w-5 mr-2" />
-          <span>{errorMessage}</span>
-        </div>
-      )}
+      {/* Toast notifications container */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+        {toasts.map((toast) => (
+          <div 
+            key={toast.id} 
+            className={`flex items-center justify-between p-4 rounded-lg shadow-lg animate-slide-in-right ${
+              toast.type === "success" 
+                ? "bg-emerald-500 text-white" 
+                : toast.type === "error" 
+                ? "bg-red-500 text-white" 
+                : "bg-amber-500 text-white"
+            }`}
+            style={{
+              animation: 'slideInRight 0.3s ease-out forwards, fadeIn 0.3s ease-out forwards'
+            }}
+          >
+            <div className="flex items-center">
+              {toast.type === "success" ? (
+                <CheckCircle2 className="h-5 w-5 mr-2" />
+              ) : toast.type === "error" ? (
+                <AlertCircle className="h-5 w-5 mr-2" />
+              ) : (
+                <AlertCircle className="h-5 w-5 mr-2" />
+              )}
+              <p>{toast.message}</p>
+            </div>
+            <button 
+              onClick={() => removeToast(toast.id)}
+              className="ml-4 p-1 rounded-full hover:bg-white/20 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+      </div>
 
       {/* Balance card */}
       <div className="mb-8">
@@ -504,7 +546,9 @@ export default function TransactionsPage() {
                     )}
                   </div>
                   {verified && recipientName && (
-                    <p className="mt-2 text-sm text-emerald-400">Sending to: {recipientName}</p>
+                    <div className="mt-2 p-2 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 font-medium">
+                      Recipient: {recipientName}
+                    </div>
                   )}
                 </div>
 

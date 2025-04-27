@@ -12,6 +12,14 @@ export default function Dashboard() {
   const userData = (auth?.userData as { full_name?: string; email?: string; balance?: number}) || {}
   const userName = userData.full_name || "User"
   const balance = userData.balance || 0
+
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+    }).format(amount)
+  }
+
   useEffect(() => {
 
     // Simulate loading delay
@@ -40,7 +48,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-amber-100/60 text-sm">Total Balance</p>
-              <h3 className="text-2xl font-bold text-amber-100">₦ { balance}</h3>
+              <h3 className="text-2xl font-bold text-amber-100">₦ { formatCurrency(balance)}</h3>
             </div>
             <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center">
               <svg
