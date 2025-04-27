@@ -1,4 +1,3 @@
-import { BarChart3, Globe, Home, MessageSquare, PanelLeft, Settings, ShieldCheck, Wallet } from "lucide-react"
 
 export default function TransactionSkeleton() {
   return (

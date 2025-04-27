@@ -1,5 +1,3 @@
-import { BarChart3, Globe, Home, MessageSquare, PanelLeft, Settings, ShieldCheck, Wallet } from "lucide-react"
-
 export default function DashboardSkeleton() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">

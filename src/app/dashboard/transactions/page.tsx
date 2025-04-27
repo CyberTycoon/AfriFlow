@@ -7,7 +7,6 @@ import {
   DollarSign,
   Send,
   CreditCard,
-  Users,
   AlertCircle,
   CheckCircle2,
   Repeat,
@@ -82,12 +81,6 @@ export default function TransactionsPage() {
     return () => clearTimeout(timer)
   }, [])
 
-interface FormData {
-    transactionType: string
-    accountNumber: string
-    amount: string
-    description: string
-}
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

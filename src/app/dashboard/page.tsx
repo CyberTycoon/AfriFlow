@@ -29,7 +29,7 @@ export default function Dashboard() {
     <>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-amber-400 mb-2">Welcome back, { userName.split(" ")[0]}</h1>
-        <p className="text-amber-100/60">Here's what's happening with your account today.</p>
+        <p className="text-amber-100/60">Here&apos;s what&apos;s happening with your account today.</p>
       </div>
 
       {/* Stats overview */}
