@@ -45,7 +45,7 @@ export default function LoginPage() {
   
       console.log("📥 [Frontend] Login response:", data);
 
-      const getToken = await fetch("/api/userToken", {
+      const getInfo = await fetch("/api/userInfo", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -53,8 +53,31 @@ export default function LoginPage() {
         },
       });
       
-      const tokenData = await getToken.json();
+      const tokenData = await getInfo.json();
       console.log("📥 [Frontend] User info response:", tokenData);
+
+      async function fetchUserAccountDetails(accessToken: string) {
+        try {
+          const res = await fetch("/api/userAccountDetails", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`, // ✅ IMPORTANT
+              "Content-Type": "application/json",
+            },
+          });
+      
+          const data = await res.json();
+          console.log("📥 [Frontend] User account details response:", data);
+          return data;
+        } catch (error) {
+          console.error("❌ [Frontend] Failed to fetch user account details:", error);
+          return null;
+        }
+      }
+
+      const account = await fetchUserAccountDetails(data.access);
+      console.log("📥 [Frontend] User account details:", account);
+
 
       login(tokenData, data.access);
       console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
