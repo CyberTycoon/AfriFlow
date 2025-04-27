@@ -74,10 +74,9 @@ export default function LoginPage() {
           return null;
         }
       }
-
-      const account = await fetchUserAccountDetails(data.access);
-      console.log("📥 [Frontend] User account details:", account);
-
+      
+      const accountDetails = await fetchUserAccountDetails(data.access);
+      console.log("📥 [Frontend] User account details:", accountDetails);
 
       login(tokenData, data.access);
       console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
