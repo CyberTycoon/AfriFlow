@@ -174,6 +174,7 @@ export default function TransactionsPage() {
     )
   }
 
+  // Update the handleChange function to reset verification when account number changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData({
@@ -181,8 +182,8 @@ export default function TransactionsPage() {
       [name]: value,
     })
 
-    // Reset verification when account number changes if not in edit mode
-    if (name === "accountNumber" && !editMode) {
+    // Reset verification when account number changes, regardless of edit mode
+    if (name === "accountNumber") {
       setVerified(false)
       setRecipientName(null)
       setShowPinInput(false)
@@ -207,6 +208,10 @@ export default function TransactionsPage() {
   // Enable edit mode for recipient details
   const enableEditMode = () => {
     setEditMode(true)
+    // Reset verification states when entering edit mode
+    setVerified(false)
+    setRecipientName(null)
+    setShowPinInput(false)
   }
 
   // Update the verifyRecipient function to use the existing API route
@@ -373,7 +378,10 @@ export default function TransactionsPage() {
         return
       }
 
-      if (!verified) {
+      // If in edit mode or not verified, verify recipient
+      if (editMode || !verified) {
+        // Reset edit mode before verification
+        setEditMode(false)
         // Step 1: Verify recipient
         verifyRecipient()
         return

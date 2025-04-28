@@ -5,6 +5,7 @@ import Image from "next/image"
 import { ArrowUpRight, ArrowDownLeft, Globe, ShieldCheck, MessageSquare } from "lucide-react"
 import DashboardSkeleton from "../components/skeletons/dashboard-skeleton"
 import { AuthContext } from "@/app/context/AuthContext" 
+import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
@@ -20,15 +21,23 @@ export default function Dashboard() {
     }).format(amount)
   }
 
-  useEffect(() => {
+  const router = useRouter();
 
+  useEffect(() => {
+    if (!userData) {
+      console.error("User data is not available");
+      router.push("/login"); // Redirect to login if user data is not available
+    }
+  }, [userData, router]);
+
+  useEffect(() => {
     // Simulate loading delay
     const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1500)
+      setIsLoading(false);
+    }, 1500);
 
-    return () => clearTimeout(timer)
-  }, [])
+    return () => clearTimeout(timer);
+  }, []);
 
   if (isLoading) {
     return <DashboardSkeleton />

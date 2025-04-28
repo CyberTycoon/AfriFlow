@@ -21,10 +21,15 @@ const Navbar = () => {
     if (userData) {
       setIsLoggedIn(true);
     } 
+    else if (userData === null) {
+      setIsLoggedIn(false);
+      router.push("/"); // redirect to login if not logged in
+    }
     else {
       setIsLoggedIn(false)
+      router.push("/"); // redirect to login if not logged in
     }
-  }, [userData]);
+  }, [userData, router]);
 
   useEffect(() => {
     if (pathname !== prevPathname) {
