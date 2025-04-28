@@ -128,7 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar />
 
       {/* Main content */}
-      <div className={`${sidebarOpen ? "lg:pl-64" : "lg:pl-20"} transition-all duration-300 mt-21 md:mt-28 lg:mt-20`}>
+      <div className={`${sidebarOpen ? "lg:pl-64" : "lg:pl-20"} transition-all duration-300 mt-16 md:mt-28 lg:mt-15`}>
         {/* Top navigation */}
         <header className="sticky top-0 z-30 bg-gray-800/80 backdrop-blur-sm border-b border-amber-900/30">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">

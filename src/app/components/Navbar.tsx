@@ -21,6 +21,9 @@ const Navbar = () => {
     if (userData) {
       setIsLoggedIn(true);
     } 
+    else {
+      setIsLoggedIn(false)
+    }
   }, [userData]);
 
   useEffect(() => {
