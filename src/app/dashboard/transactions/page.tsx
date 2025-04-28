@@ -65,11 +65,14 @@ export default function TransactionsPage() {
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
   const [editMode, setEditMode] = useState(false)
+  const [transactionId, setTransactionId] = useState<string | null>(null)
+  const [timeStamp, setTimeStamp] = useState<string | null>(null)
 
   const auth = useContext(AuthContext)
   const user = (auth?.userData as { full_name?: string; email?: string; balance?: number; accNumber?: string }) || {}
   const balance = user.balance || 24568.8
   const accNumber = user.accNumber || "2458-7896-3214-0067"
+
 
   // Form state with proper typing
   const [formData, setFormData] = useState({
@@ -324,22 +327,25 @@ export default function TransactionsPage() {
         }),
       })
 
-      const data = await response.json()
+      const transferdata = await response.json()
+      console.log("Transfer Data:", transferdata)
       setIsSubmitting(false)
 
       if (response.ok) {
         // Show custom success toast
         setSuccessMessage(
-          `Successfully transferred ${formatCurrency(Number(formData.amount))} to ${recipientName || "recipient"}!`,
+          transferdata.message
         )
+        setTransactionId(transferdata.transaction_id)
+        setTimeStamp(transferdata.timestamp)
         setShowSuccessToast(true)
         setTimeout(() => setShowSuccessToast(false), 5000)
 
         // Update user balance if returned in the response
-        if (data.balance && auth?.setUserData) {
+        if (transferdata.balance && auth?.setUserData) {
           auth.setUserData({
             ...user,
-            balance: data.balance,
+            balance: transferdata.balance,
           })
         }
         // Reset form
@@ -357,15 +363,15 @@ export default function TransactionsPage() {
         
       } else {
         // Handle specific error types
-        if (data.error && data.error.toLowerCase().includes("pin")) {
+        if (transferdata.error && transferdata.error.toLowerCase().includes("pin")) {
           showToast("error", "Invalid PIN. Please try again.")
         } else if (
-          (data.error && data.error.toLowerCase().includes("balance")) ||
-          (data.error && data.error.toLowerCase().includes("insufficient"))
+          (transferdata.error && transferdata.error.toLowerCase().includes("balance")) ||
+          (transferdata.error && transferdata.error.toLowerCase().includes("insufficient"))
         ) {
           showToast("error", "Insufficient funds. Please enter a lower amount.")
         } else {
-          showToast("error", data.error || "Transfer failed")
+          showToast("error", transferdata.error || "Transfer failed")
         }
       }
     } catch (error) {
@@ -568,14 +574,12 @@ export default function TransactionsPage() {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-amber-100/60">Transaction ID</span>
                 <span className="text-amber-100">
-                  {Math.floor(Math.random() * 1000000)
-                    .toString()
-                    .padStart(6, "0")}
+                   {transactionId}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm mt-2">
                 <span className="text-amber-100/60">Date & Time</span>
-                <span className="text-amber-100">{new Date().toLocaleString()}</span>
+                <span className="text-amber-100">{ timeStamp}</span>
               </div>
             </div>
           </div>
