@@ -5,6 +5,7 @@ export async function POST(req: Request) {
       const body = await req.json();
       const cookieStore = await cookies();
       const accessToken = cookieStore.get('accessToken')?.value;
+      
   
       if (!accessToken) {
         return new Response(JSON.stringify({ message: "Unauthorized" }), {

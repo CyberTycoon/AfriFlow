@@ -1,155 +1,101 @@
 'use client'
 
-import React, { createContext, useEffect } from 'react';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 interface AuthContextType {
   userData: Record<string, unknown> | null;
-
-  login: (data: Record<string, unknown>, balance: number, accNumber: string) => void;
+  login: (data: Record<string, unknown>) => void;
   logout: () => void;
   setUserData: React.Dispatch<React.SetStateAction<Record<string, unknown> | null>>;
+  syncUserData: () => Promise<void>;  // <-- NEW
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();
-  const [userData, setUserData] = React.useState<Record<string, unknown> | null>(null);
-  const [token, setToken] = React.useState<string | null>(null);
+  const [userData, setUserData] = useState<Record<string, unknown> | null>(null);
 
+  // Initialize from cookies and localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem("userData");
-    const storedToken = localStorage.getItem("token");
-    const storedBalance = localStorage.getItem("balance");
-    const storedAccNumber = localStorage.getItem("accNumber");
+    const accessTokenFromCookie = Cookies.get('accessToken');
+    if (accessTokenFromCookie) {
+      localStorage.setItem('accessToken', accessTokenFromCookie);
+    }
+    else { 
+      const accessTokenFromLocalStorage = localStorage.getItem('accessToken');
+      if (accessTokenFromLocalStorage) {
+        Cookies.set('accessToken', accessTokenFromLocalStorage, { expires: 7 });
+      }
+    }
 
-    if (storedUser && storedToken && storedBalance && storedAccNumber) {
+    const storedUser = localStorage.getItem('userData');
+    if (storedUser) {
       setUserData(JSON.parse(storedUser));
-      setToken(storedToken);
     }
   }, []);
 
-  useEffect(() => {
-    if (!token) return;
-  
-    const fetchLatestBalance = async () => {
-      try {
-        const response = await fetch("/api/userAccount", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.status === 401) {
-          console.warn("⚠️ [Auth] Access token expired. Trying to refresh...");
-          await refreshAccessToken();
-          return await fetchLatestBalance(); // 👈 after refresh, retry fetching immediately
-        }
-  
-        if (!response.ok) {
-          throw new Error("Failed to fetch latest balance");
-        }
-  
-        const updatedAccountDetails = await response.json();
-  
-        setUserData((prevUserData) => {
-          if (!prevUserData) return null;
-          const updatedUserData = { ...prevUserData, balance: updatedAccountDetails.balance };
-          localStorage.setItem("userData", JSON.stringify(updatedUserData));
-          localStorage.setItem("balance", JSON.stringify(updatedAccountDetails.balance));
-          return updatedUserData;
-        });
-  
-        console.log("🔄 [Auth] Updated balance from API:", updatedAccountDetails.balance);
-      } catch (error) {
-        console.error("❌ [Auth] Error updating balance:", error);
-      }
-    };
-  
-    const refreshAccessToken = async () => {
-      try {
-        const refresh = localStorage.getItem("refresh");
-        if (!refresh) {
-          console.error("❌ [Auth] No refresh token available. Logging out...");
-          logout();
-          return false; 
-        }
-  
-        const res = await fetch("/api/refresh", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ refresh: refresh }),
-        });
-  
-        const data = await res.json();
-  
-        if (!res.ok) {
-          throw new Error("Failed to refresh token");
-        }
-  
-        // Save new access token
-        setToken(data.access);
-        localStorage.setItem("token", data.access);
-        console.log("🔄 [Auth] Token refreshed successfully:", data.access);
-      } catch (error) {
-        console.error("❌ [Auth] Token refresh failed:", error);
-        logout(); // Force logout if refresh fails
-      }
-    };
-  
-    const interval = setInterval(fetchLatestBalance, 10000); // every 10 seconds
-    return () => clearInterval(interval);
-  }, );
-  
-  
-
-  // 👉 NEW useEffect to sync balance in real-time
-  useEffect(() => {
-    if (userData && userData.balance !== undefined) {
-      localStorage.setItem("balance", JSON.stringify(userData.balance));
+  const syncTokenToCookies = () => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      Cookies.set('accessToken', token, { expires: 7 });
     }
-  }, [userData]);
+  };
 
-  const login = (data: Record<string, unknown>, balance: number, accNumber: string) => {
-  const updatedUserData = { ...data, balance, accNumber };
+  const login = (data: Record<string, unknown>) => {
+    setUserData(data);
+    localStorage.setItem('userData', JSON.stringify(data));
 
-  setUserData(updatedUserData);
-  setToken(token);
+    if (data.accessToken) {
+      localStorage.setItem('accessToken', data.accessToken as string);
+      syncTokenToCookies();
+    }
+  };
 
-  localStorage.setItem("userData", JSON.stringify(updatedUserData));
-  localStorage.setItem("balance", JSON.stringify(balance));
-    localStorage.setItem("accNumber", accNumber);
-    
+  const logout = () => {
+    setUserData(null);
+    localStorage.removeItem('userData');
+    localStorage.removeItem('accessToken');
+    Cookies.remove('accessToken');
+    router.push('/');
+    console.log('🔒 [Auth] User logged out.');
+  };
 
-  // 👉 Save refresh as well if it's available
-  if (data.refresh) {
-    localStorage.setItem("refresh", data.refresh as string);
-  }
-};
+  // 🚀 New function to always pull fresh userInfo + balance from backend
+  const syncUserData = useCallback(async () => {
+    try {
+      console.log('🔄 [Auth] Syncing user info and balance...');
+      const [userInfoRes, accountRes] = await Promise.all([
+        fetch("/api/userInfo", { method: "GET", headers: { "Content-Type": "application/json" }, credentials: 'include' }),
+        fetch("/api/userAccount", { method: "GET", headers: { "Content-Type": "application/json" }, credentials: 'include' }),
+      ]);
 
+      if (!userInfoRes.ok || !accountRes.ok) {
+        throw new Error('Failed to sync user data.');
+      }
 
-const logout = () => {
-  setUserData(null);
-  setToken(null);
+      const userInfo = await userInfoRes.json();
+      const accountDetails = await accountRes.json();
 
-  localStorage.removeItem("userData");
-  localStorage.removeItem("token");
-  localStorage.removeItem("balance");
-  localStorage.removeItem("accNumber");
-  localStorage.removeItem("refresh"); // clear it too
-  router.push("/"); 
-  console.log("🔒 [Auth] User logged out successfully.");
-};
+      const updatedData = {
+        tokenData: userInfo,
+        balance: accountDetails.balance,
+        walletNumber: accountDetails.wallet_number,
+      };
 
-  
+      setUserData(updatedData);
+      localStorage.setItem('userData', JSON.stringify(updatedData));
+      console.log('✅ [Auth] User data synced successfully.');
+
+    } catch (error) {
+      console.error('❌ [Auth] Error syncing user data:', error);
+    }
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ userData, login, logout, setUserData }}>
+    <AuthContext.Provider value={{ userData, login, logout, setUserData, syncUserData }}>
       {children}
     </AuthContext.Provider>
   );

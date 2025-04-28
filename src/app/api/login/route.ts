@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     if (accessToken) {
       cookieHeaders.push(
-        `accessToken=${accessToken}; HttpOnly; Path=/; Max-Age=${60 * 60}; SameSite=Lax; ${
+        `accessToken=${accessToken}; HttpOnly; Path=/; Max-Age=${60 * 120}; SameSite=Strict; ${
           process.env.NODE_ENV === "production" ? "Secure" : ""
         }`
       );

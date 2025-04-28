@@ -79,6 +79,13 @@ export default function TransactionsPage() {
     description: "",
   })
 
+  useEffect(() => {
+    const syncData = async () => {
+      await auth?.syncUserData();
+    };
+    syncData();
+  }, [auth]);
+
   // Mock user data
   const userData = {
     balance: balance,
@@ -347,6 +354,7 @@ export default function TransactionsPage() {
         setShowPinInput(false)
         setPin("")
         setEditMode(false)
+        
       } else {
         // Handle specific error types
         if (data.error && data.error.toLowerCase().includes("pin")) {

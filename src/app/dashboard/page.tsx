@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useContext } from "react"
+import { useState, useEffect, useContext, useMemo } from "react"
 import Image from "next/image"
 import { ArrowUpRight, ArrowDownLeft, Globe, ShieldCheck, MessageSquare } from "lucide-react"
 import DashboardSkeleton from "../components/skeletons/dashboard-skeleton"
@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation"
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const auth = useContext(AuthContext)
-  const userData = (auth?.userData as { full_name?: string; email?: string; balance?: number}) || {}
+  const userData = useMemo(() => (auth?.userData as { full_name?: string; email?: string; balance?: number}) || {}, [auth?.userData])
   const userName = userData.full_name || "User"
   const balance = userData.balance || 0
 

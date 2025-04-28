@@ -70,11 +70,13 @@ const loginUser = async () => {
     });
     const accountDetails = await getAccountDetails.json();
     console.log("📥 [Frontend] User account details response:", accountDetails);
-
-      router.push("/dashboard");
-      login(tokenData, accountDetails.balance, accountDetails.wallet_number);
+    router.push("/dashboard");
+    
+    setTimeout(() => {
+      login({ tokenData, balance: accountDetails.balance, walletNumber: accountDetails.wallet_number });
       console.log("✅ [Frontend] User data stored in context");
       setIsLoading(false);
+    }, 1000);
   
   } catch (error) {
     setIsLoading(false);

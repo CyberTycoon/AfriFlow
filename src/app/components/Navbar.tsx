@@ -18,35 +18,39 @@ const Navbar = () => {
 
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     if (userData) {
       setIsLoggedIn(true);
-    } 
-    else if (userData === null) {
-      setIsLoggedIn(false);
-      router.push("/"); // redirect to login if not logged in
+    } else if (userData === null) {
+      // Delay decision to log out
+      timeoutId = setTimeout(() => {
+        const refreshedToken = localStorage.getItem('accessToken');
+        if (!refreshedToken) {
+          setIsLoggedIn(false);
+          router.push("/");
+        }
+      }, 2000); // 2 seconds delay before assuming logout
     }
-    else {
-      setIsLoggedIn(false)
-      router.push("/"); // redirect to login if not logged in
-    }
+
+    return () => clearTimeout(timeoutId); // Clean up on unmount
   }, [userData, router]);
 
   useEffect(() => {
     if (pathname !== prevPathname) {
-      setPrevPathname(pathname); // update stored path
-      setMobileMenuOpen(false);  // close menu
+      setPrevPathname(pathname);
+      setMobileMenuOpen(false);
     }
   }, [pathname, prevPathname]);
-
 
   useEffect(() => {
     setDashboard(pathname === "/dashboard");
   }, [pathname]);
 
   const handleLogout = () => {
-    auth?.logout();              // clear context and tokens
-    setIsLoggedIn(false);        // update local state
-    router.push("/");       // then navigate
+    auth?.logout();
+    setIsLoggedIn(false);
+    router.push("/");
   };
 
   return (
