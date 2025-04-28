@@ -1,8 +1,17 @@
+
+import { cookies } from "next/headers";
 export async function POST(req: Request) {
     try {
       const body = await req.json();
-      const headers = req.headers;
-      const authHeader = headers.get("Authorization");
+      const cookieStore = await cookies();
+      const accessToken = cookieStore.get('accessToken')?.value;
+  
+      if (!accessToken) {
+        return new Response(JSON.stringify({ message: "Unauthorized" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
   
       console.log("✅ [API] Incoming Transfer Request Body:", body);
   
@@ -11,7 +20,7 @@ export async function POST(req: Request) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": authHeader || "", // <-- fixed here
+          "Authorization": `Bearer ${accessToken}`
         },
         body: JSON.stringify(body),
       });

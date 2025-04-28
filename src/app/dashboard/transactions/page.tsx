@@ -65,7 +65,7 @@ export default function TransactionsPage() {
   const user = (auth?.userData as { full_name?: string; email?: string; balance?: number; accNumber?: string }) || {}
   const balance = user.balance || 24568.8
   const accNumber = user.accNumber || "2458-7896-3214-0067"
-  const token = auth?.token || null
+ 
 
   // Form state with proper typing
   const [formData, setFormData] = useState({
@@ -211,7 +211,7 @@ export default function TransactionsPage() {
       return
     }
 
-    if (!token) {
+    if (!user) {
       showToast("error", "Authentication required")
       return
     }
@@ -223,7 +223,7 @@ export default function TransactionsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          credentials: 'include',
         },
         body: JSON.stringify({
           step: "verify",
@@ -258,7 +258,7 @@ export default function TransactionsPage() {
       return
     }
 
-    if (!token) {
+    if (!user) {
       showToast("error", "Authentication required")
       return
     }
@@ -276,7 +276,7 @@ export default function TransactionsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          credentials: 'include',
         },
         body: JSON.stringify({
           step: "transfer",

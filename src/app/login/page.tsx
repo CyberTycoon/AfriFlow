@@ -22,93 +22,69 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
  
-  const loginUser = async () => {
-    setErrorMessage(null);
-    setIsLoading(true);
-  
-    try {
-      const loginData = {
-        email: formData.email,
-        password: formData.password,
-      };
-  
-      console.log("📤 [Frontend] Sending login request to /api/login:", loginData);
-  
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(loginData),
-      });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.detail || data.message || "Login failed. Please try again.");
-      }
-  
-      console.log("📥 [Frontend] Login response:", data);
-  
-      // Fetch user info
-      const getInfo = await fetch("/api/userInfo", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${data.access}`,
-        },
-      });
-      const tokenData = await getInfo.json();
-      console.log("📥 [Frontend] User info response:", tokenData);
-  
-      // Fetch user account details
-      const getAccountDetails = await fetch("/api/userAccount", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${data.access}`,
-        },
-      });
-      const accountDetails = await getAccountDetails.json();
-      console.log("📥 [Frontend] User account details response:", accountDetails);
-      // Store user data and token in context
-  
-      if (!response.ok) {
-        let errorMsg = "Login failed. Please try again.";
-        setIsLoading(false)
-        if (data) {
-          if (typeof data === "string") errorMsg = data;
-          else if (data.detail) errorMsg = data.detail;
-          else if (data.message) errorMsg = data.message;
-          else {
-            const errors = Object.entries(data)
-              .flatMap(([key, value]) => (Array.isArray(value) ? value.map(err => `${key}: ${err}`) : [`${key}: ${value}`]))
-              .join(", ");
-            if (errors) errorMsg = errors;
-          }
-        }
-        throw new Error(errorMsg);
-      }
-  
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-  
-      setTimeout(() => {
-        router.push("/dashboard");
-        login(tokenData, data.access, data.refresh, accountDetails.balance, accountDetails.wallet_number);
-        console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
-      console.log("📥 [Frontend] User data and token stored in context:", tokenData, data.access);
-        setIsLoading(false);
-      }, 2000);
-    } catch (error) {
-      setIsLoading(false)
-      console.error("❌ [Frontend] Login error:", error);
-      setErrorMessage(error instanceof Error ? error.message : "Login failed. Please try again.");
-    } finally {
-      console.log("✅ [Frontend] Final login state:", formData);
+const loginUser = async () => {
+  setErrorMessage(null);
+  setIsLoading(true);
+
+  try {
+    const loginData = {
+      email: formData.email,
+      password: formData.password,
+    };
+
+    console.log("📤 [Frontend] Sending login request to /api/login:", loginData);
+
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(loginData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || data.message || "Login failed. Please try again.");
     }
-  };
+
+    console.log("📥 [Frontend] Login response:", data);
+
+    // Fetch user info — no need to pass Authorization header, cookie will be automatically sent
+    const getInfo = await fetch("/api/userInfo", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: 'include', // 👈 important! ensures cookies are sent
+    });
+    const tokenData = await getInfo.json();
+    console.log("📥 [Frontend] User info response:", tokenData);
+
+    const getAccountDetails = await fetch("/api/userAccount", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: 'include', // 👈 important! ensures cookies are sent
+    });
+    const accountDetails = await getAccountDetails.json();
+    console.log("📥 [Frontend] User account details response:", accountDetails);
+
+      router.push("/dashboard");
+      login(tokenData, accountDetails.balance, accountDetails.wallet_number);
+      console.log("✅ [Frontend] User data stored in context");
+      setIsLoading(false);
+  
+  } catch (error) {
+    setIsLoading(false);
+    console.error("❌ [Frontend] Login error:", error);
+    setErrorMessage(error instanceof Error ? error.message : "Login failed. Please try again.");
+  } finally {
+    console.log("✅ [Frontend] Final login state:", formData);
+  }
+};
+
   
   return (
     <div className="relative min-h-screen bg-gray-900 text-white py-10">

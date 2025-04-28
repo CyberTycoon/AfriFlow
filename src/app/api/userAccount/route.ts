@@ -1,23 +1,22 @@
+import { cookies } from "next/headers";
+
 export async function GET(req: Request) {
     try {
-      const headers = req.headers;
-      const authHeader = headers.get("Authorization");
-  
-      console.log('🪪 Authorization Header:', authHeader); // 👈 ADD THIS
-  
-      if (!authHeader) {
-        console.log('🚫 Missing Authorization header');
-        return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return new Response(JSON.stringify({ message: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
   
 const proxyRes = await fetch("https://paybridge.pythonanywhere.com/api/auth/wallet/", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: authHeader,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
   

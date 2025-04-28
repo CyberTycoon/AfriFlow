@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   userData: Record<string, unknown> | null;
-  token: string | null;
-  login: (data: Record<string, unknown>, token: string, refresh: string, balance: number, accNumber: string) => void;
+
+  login: (data: Record<string, unknown>, balance: number, accNumber: string) => void;
   logout: () => void;
   setUserData: React.Dispatch<React.SetStateAction<Record<string, unknown> | null>>;
 }
@@ -104,7 +104,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   
     const interval = setInterval(fetchLatestBalance, 10000); // every 10 seconds
     return () => clearInterval(interval);
-  }, [token]);
+  }, );
   
   
 
@@ -115,17 +115,16 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     }
   }, [userData]);
 
-  const login = (data: Record<string, unknown>, token: string, refresh: string, balance: number, accNumber: string) => {
+  const login = (data: Record<string, unknown>, balance: number, accNumber: string) => {
   const updatedUserData = { ...data, balance, accNumber };
 
   setUserData(updatedUserData);
   setToken(token);
 
   localStorage.setItem("userData", JSON.stringify(updatedUserData));
-  localStorage.setItem("token", token);
   localStorage.setItem("balance", JSON.stringify(balance));
     localStorage.setItem("accNumber", accNumber);
-    localStorage.setItem("refresh", refresh);
+    
 
   // 👉 Save refresh as well if it's available
   if (data.refresh) {
@@ -150,7 +149,7 @@ const logout = () => {
   
 
   return (
-    <AuthContext.Provider value={{ userData, token, login, logout, setUserData }}>
+    <AuthContext.Provider value={{ userData, login, logout, setUserData }}>
       {children}
     </AuthContext.Provider>
   );
