@@ -52,6 +52,10 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       localStorage.setItem('accessToken', data.accessToken as string);
       syncTokenToCookies();
     }
+
+    if (Cookies.get('accessToken')) {
+      localStorage.setItem('accessToken', Cookies.get('accessToken') as string);
+    }
   };
 
   const logout = () => {
