@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import TransactionSkeleton from "@/app/components/skeletons/transaction-skeleton"
 import { AuthContext } from "@/app/context/AuthContext"
+import TransactionsHistory from "@/app/components/dashboard/transactionsHistory"
 
 // Define transaction type as a proper TypeScript type
 type TransactionType = "incoming" | "outgoing" | "exchange"
@@ -1033,53 +1034,9 @@ export default function TransactionsPage() {
 
         {/* Recent transactions */}
         <div className="bg-gray-800/80 rounded-xl border border-amber-500/20 overflow-hidden">
-          <div className="p-6 border-b border-amber-900/30">
-            <h2 className="text-lg font-bold text-amber-400">Recent Transactions</h2>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {userData.recentTransactions.map((transaction) => {
-                // Get the appropriate appearance for this transaction type
-                const appearance = getTransactionAppearance(transaction.type)
-
-                return (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors"
-                  >
-                    <div className="flex items-center">
-                      <div
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${appearance.bgColor}`}
-                      >
-                        {appearance.icon}
-                      </div>
-                      <div>
-                        <p className="font-medium text-amber-100">{transaction.name}</p>
-                        <p className="text-xs text-amber-100/60">
-                          {transaction.date} • {transaction.time}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p
-                        className={`font-medium ${transaction.type === "incoming" ? "text-emerald-400" : transaction.type === "outgoing" ? "text-red-400" : "text-amber-400"}`}
-                      >
-                        {transaction.type === "incoming" ? "+" : transaction.type === "outgoing" ? "-" : ""}
-                        {formatCurrency(transaction.amount)}
-                        {transaction.details && <span className="text-xs ml-1">{transaction.details}</span>}
-                      </p>
-                      <p className="text-xs text-amber-100/60">{transaction.status}</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="mt-4 text-center">
-              <button className="text-amber-400 text-sm hover:underline">View all transactions</button>
-            </div>
-          </div>
+          <TransactionsHistory />
         </div>
       </div>
     </>
-  )
+  );
 }

@@ -21,6 +21,15 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+  interface Transaction {
+    id: string;
+    amount: number;
+    date: string;
+    description: string;
+  }
+
+  const [transactionHistory, setTransactionHistory] = useState<Transaction[]>([]);
+
  
 const loginUser = async () => {
   setErrorMessage(null);
@@ -66,14 +75,32 @@ const loginUser = async () => {
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: 'include', // 👈 important! ensures cookies are sent
+      credentials: 'include',
     });
     const accountDetails = await getAccountDetails.json();
     console.log("📥 [Frontend] User account details response:", accountDetails);
+
+    const getTransactionHistory = await fetch("/api/transfer/history", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: 'include', 
+    })
+    const transactionHistory = await getTransactionHistory.json();
+    console.log("📥 [Frontend] User transaction history response:", transactionHistory);
     router.push("/dashboard");
     
     setTimeout(() => {
-      login({ tokenData, balance: accountDetails.balance, walletNumber: accountDetails.wallet_number });
+      login({
+        tokenData,
+        balance: accountDetails.balance,
+        walletNumber: accountDetails.wallet_number,
+        transactionHistory, // 👈 Save transactions globally
+      });
+    
+      setTransactionHistory(transactionHistory); // 👈 Save transactions globally
+      console.log("✅ [Frontend] User data and transactions stored in context");
       console.log("✅ [Frontend] User data stored in context");
       setIsLoading(false);
     }, 1000);

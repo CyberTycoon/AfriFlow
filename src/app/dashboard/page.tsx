@@ -6,6 +6,7 @@ import { ArrowUpRight, ArrowDownLeft, Globe, ShieldCheck, MessageSquare } from "
 import DashboardSkeleton from "../components/skeletons/dashboard-skeleton"
 import { AuthContext } from "@/app/context/AuthContext" 
 import { useRouter } from "next/navigation"
+import TransactionsHistory from "../components/dashboard/transactionsHistory"
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
@@ -16,6 +17,7 @@ export default function Dashboard() {
   }
   const userName = (userData?.tokenData as TokenData)?.full_name || "User";
   const balance = userData.balance || 0
+  const transactionHistory = auth?.transactionHistory || [] // Assuming this is an array of transactions
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat("en-NG", {
@@ -45,6 +47,7 @@ export default function Dashboard() {
   if (isLoading) {
     return <DashboardSkeleton />
   }
+
 
   return (
     <>
@@ -142,85 +145,7 @@ export default function Dashboard() {
 
       {/* Recent transactions and African trade map */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="lg:col-span-2 bg-gray-800/80 rounded-xl border border-amber-500/20 overflow-hidden">
-          <div className="p-6 border-b border-amber-900/30">
-            <h2 className="text-lg font-bold text-amber-400">Recent Transactions</h2>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {/* Transaction 1 */}
-              <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <ArrowDownLeft className="h-5 w-5 text-emerald-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-amber-100">Payment from KenyaExport</p>
-                    <p className="text-xs text-amber-100/60">Apr 18, 2024 • 10:24 AM</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-emerald-400">+₦5,240.00</p>
-                  <p className="text-xs text-amber-100/60">Completed</p>
-                </div>
-              </div>
-
-              {/* Transaction 2 */}
-              <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <ArrowUpRight className="h-5 w-5 text-red-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-amber-100">Payment to GhanaConnect</p>
-                    <p className="text-xs text-amber-100/60">Apr 16, 2024 • 2:38 PM</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-red-400">-₦3,180.00</p>
-                  <p className="text-xs text-amber-100/60">Completed</p>
-                </div>
-              </div>
-
-              {/* Transaction 3 */}
-              <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <ArrowUpRight className="h-5 w-5 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-amber-100">Currency Exchange</p>
-                    <p className="text-xs text-amber-100/60">Apr 15, 2024 • 9:12 AM</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-amber-400">₦2,000 → ₦1,840,000</p>
-                  <p className="text-xs text-amber-100/60">Completed</p>
-                </div>
-              </div>
-
-              {/* Transaction 4 */}
-              <div className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center mr-4">
-                    <ArrowDownLeft className="h-5 w-5 text-emerald-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-amber-100">Payment from SenegalShip</p>
-                    <p className="text-xs text-amber-100/60">Apr 12, 2024 • 4:45 PM</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-emerald-400">+₦4,750.00</p>
-                  <p className="text-xs text-amber-100/60">Completed</p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 text-center">
-              <button className="text-amber-400 text-sm hover:underline">View all transactions</button>
-            </div>
-          </div>
-        </div>
+      <TransactionsHistory/>
 
         <div className="bg-gray-800/80 rounded-xl border border-amber-500/20 overflow-hidden">
           <div className="p-6 border-b border-amber-900/30">
