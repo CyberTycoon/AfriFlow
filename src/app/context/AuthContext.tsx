@@ -44,7 +44,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const syncTokenToCookies = () => {
     const token = localStorage.getItem('accessToken');
     if (token) {
-      Cookies.set('accessToken', token, { expires: 7 });
+      Cookies.set('accessToken', token, { expires: 7  });
     }
   };
 
@@ -99,6 +99,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     } catch (error) {
       console.error('❌ [Auth] Error syncing user data:', error);
+      logout()
     }
   }, []);
 
