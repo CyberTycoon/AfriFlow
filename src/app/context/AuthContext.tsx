@@ -35,6 +35,10 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     if (storedUser) {
       setUserData(JSON.parse(storedUser));
     }
+    if (!storedUser && !accessTokenFromCookie && localStorage.getItem('accessToken')) {
+      console.log('🔒 [Auth] No user data found in localStorage or cookies. User is logged out.');
+      logout()
+    }
   }, []);
 
   const syncTokenToCookies = () => {
