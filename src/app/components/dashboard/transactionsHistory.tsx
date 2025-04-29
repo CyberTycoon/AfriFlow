@@ -5,8 +5,9 @@ import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 const TransactionsHistory = () => {
   const auth = useContext(AuthContext);
-    const transactionHistory = auth?.transactionHistory || [];
-    const router = useRouter()
+  const transactionHistory = auth?.transactionHistory || [];
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   return (
     <div className="lg:col-span-2 bg-gray-800/80 rounded-xl border border-amber-500/20 overflow-hidden">
@@ -84,14 +85,30 @@ const TransactionsHistory = () => {
             })}
         </div>
         <div className="mt-4 text-center">
-                  <button
-                      onClick={() => {
-                        setTimeout(() => {
-                          router.push("/dashboard/transactions/history");
-                        }, 1000);
-                      }}
-                      className="text-amber-400 text-sm hover:underline">
-            View all transactions
+          <button
+            disabled={loading}
+            onClick={(e) => {
+              e.preventDefault();
+              setTimeout(() => {
+                setLoading(true);
+                router.push("/dashboard/transactions/history");
+              }, 2000);
+              setLoading(false);
+            }}
+            className="text-amber-400 text-sm hover:underline"
+          >
+            {loading == true ? (
+              <div className="flex items-center justify-center gap-2">
+                <div
+                  className="h-4 w-4 border-2 border-t-transparent border-amber-600 rounded-full animate-spin"
+                  role="status"
+                  aria-label="Loading"
+                />
+                <span className="text-sm text-amber-600">Loading...</span>
+              </div>
+            ) : (
+              "View All Transactions"
+            )}
           </button>
         </div>
       </div>
