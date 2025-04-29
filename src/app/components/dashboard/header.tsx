@@ -9,7 +9,7 @@ interface HeaderProps {
 
 export default function Header({ onMobileMenuOpen }: HeaderProps) {
   const auth = useContext(AuthContext)
-  const userData = (auth?.userData as { full_name?: string; email?: string }) || {}
+  const userData = ((auth?.userData)?.tokenData as { full_name?: string; email?: string }) || {}
 
   return (
     <header className="sticky top-0 z-30 bg-gray-800/80 backdrop-blur-sm border-b border-amber-900/30">

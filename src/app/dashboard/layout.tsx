@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const pathname = usePathname()
     const auth = useContext(AuthContext)
-  const userData = (auth?.userData as { full_name?: string; email?: string }) || {}
+  const userData = ((auth?.userData?.tokenData) as { full_name?: string; email?: string }) || {}
   const userName = userData.full_name || "User"
   // Navigation items for mobile menu
   const navItems = [

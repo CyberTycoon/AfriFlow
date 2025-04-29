@@ -10,8 +10,11 @@ import { useRouter } from "next/navigation"
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const auth = useContext(AuthContext)
-  const userData = useMemo(() => (auth?.userData as { full_name?: string; email?: string; balance?: number}) || {}, [auth?.userData])
-  const userName = userData.full_name || "User"
+  const userData = useMemo(() => (auth?.userData as { full_name?: string; email?: string; balance?: number; tokenData?: TokenData }) || {}, [auth?.userData])
+  interface TokenData {
+    full_name?: string;
+  }
+  const userName = (userData?.tokenData as TokenData)?.full_name || "User";
   const balance = userData.balance || 0
 
   const formatCurrency = (amount: number): string => {

@@ -38,7 +38,7 @@ const Sidebar = () => {
 
   // Try to get auth context, but don't throw error if not available
   const auth = useContext(AuthContext)
-  const userData = (auth?.userData as { full_name?: string; email?: string }) || {}
+  const userData = ((auth?.userData?.tokenData) as { full_name?: string; email?: string }) || {}
 
   // Navigation items
   const navItems = [
