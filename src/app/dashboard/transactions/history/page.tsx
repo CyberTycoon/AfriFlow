@@ -1,12 +1,13 @@
+'use client'
 import React from "react";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { AuthContext } from "@/app/context/AuthContext";
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+
 const TransactionsHistory = () => {
   const auth = useContext(AuthContext);
-    const transactionHistory = auth?.transactionHistory || [];
-    const router = useRouter()
+  const transactionHistory = auth?.transactionHistory || [];
+
 
   return (
     <div className="lg:col-span-2 bg-gray-800/80 rounded-xl border border-amber-500/20 overflow-hidden">
@@ -23,7 +24,6 @@ const TransactionsHistory = () => {
                 new Date(b.timestamp).getTime() -
                 new Date(a.timestamp).getTime()
             )
-            .slice(0, 5)
             .map((txn) => {
               const isIncoming = txn.transaction_direction === "incoming";
               const amountColor = isIncoming
@@ -82,17 +82,6 @@ const TransactionsHistory = () => {
                 </div>
               );
             })}
-        </div>
-        <div className="mt-4 text-center">
-                  <button
-                      onClick={() => {
-                        setTimeout(() => {
-                          router.push("/dashboard/transactions/history");
-                        }, 1000);
-                      }}
-                      className="text-amber-400 text-sm hover:underline">
-            View all transactions
-          </button>
         </div>
       </div>
     </div>
