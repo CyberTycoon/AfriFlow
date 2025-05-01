@@ -655,7 +655,7 @@ export default function Signup() {
                   <div>
                     <label className="block mb-2 text-amber-100">🔐 Setup PIN (for transactions):</label>
                     <input
-                      type="text" // Change to text for better control
+                      type="password" // Change to text for better control
                       name="pin"
                       value={formData.pin}
                       onChange={(e) => {
