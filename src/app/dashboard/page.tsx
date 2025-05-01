@@ -128,7 +128,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-amber-100/60 text-sm">Exchange Rate</p>
-              <h3 className="text-2xl font-bold text-amber-100">1 USD = 920 NGN</h3>
+              <h3 className="text-2xl font-bold text-amber-100">1 GHS = 112.48 NGN</h3>
             </div>
             <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center">
               <Globe className="h-5 w-5 text-amber-500" />
