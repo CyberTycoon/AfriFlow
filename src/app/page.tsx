@@ -152,8 +152,8 @@ export default function HomePage() {
                 Empowering African Trade Through Voice Technology
               </h3>
               <p className="text-amber-100/80 mb-6 text-lg">
-                AfriFlow is a revolutionary voice-powered payment and trade
-                assistant designed specifically for African Micro, Small, and
+                AfriFlow is a revolutionary cross-border payment and trade
+                system designed specifically for African Micro, Small, and
                 Medium Enterprises (MSMEs). We understand the unique challenges
                 faced by African businesses in the global marketplace.
               </p>
@@ -161,13 +161,12 @@ export default function HomePage() {
                 Our mission is to break down barriers to international trade by
                 making cross-border transactions, regulatory compliance, and
                 currency conversion accessible to everyone - regardless of
-                technical expertise, language, or location.
+                technical expertise or location.
               </p>
               <div className="flex items-center p-4 bg-gray-800 rounded-xl border border-amber-500/20">
                 <div className="h-12 w-1 bg-amber-500 mr-4"></div>
                 <p className="text-xl font-medium text-amber-300">
-                  &quot;We&apos;re building the future of African commerce, one
-                  voice command at a time.&quot;
+                  &quot;We&apos;re building the future of African trade — where businesses connect, comply, and grow&quot;
                 </p>
               </div>
             </div>
@@ -199,10 +198,10 @@ export default function HomePage() {
                   Our Mission
                 </h4>
                 <p className="text-amber-100/80 mb-6">
-                  To leverage voice technology and artificial intelligence to
+                  To leverage artificial intelligence to
                   simplify cross-border transactions and trade compliance for
-                  African MSMEs, making international business accessible in
-                  local languages.
+                  African MSMEs, making international business accessible by
+                  local businesses.
                 </p>
               </div>
             </div>
