@@ -35,7 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: "/dashboard", icon: Home, label: "Dashboard" },
     { href: "/dashboard/transactions", icon: Wallet, label: "Transactions" },
     { href: "/dashboard/trade", icon: Globe, label: "Trade" },
-    { href: "/dashboard/compliance", icon: ShieldCheck, label: "Compliance" },
+    { href: "/dashboard/chatbot", icon: ShieldCheck, label: "Compliance" },
     { href: "/dashboard/voice", icon: MessageSquare, label: "Voice Assistant" },
     { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },

@@ -282,7 +282,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 mt-10">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center lg:px-30 pt-10 mt-10">
       {/* African-inspired background patterns */}
       <div className="absolute inset-0 overflow-hidden opacity-10">
         <div className="absolute top-0 left-0 w-full h-full">
@@ -300,22 +300,7 @@ export default function Signup() {
       </div>
 
 
-      {/* Main content container - two columns with no gap */}
-      <div className="relative z-10 w-full max-w-5xl flex flex-col md:flex-row items-stretch">
-        {/* Video Tutorial Column - Left Side */}
-        <div className="w-full md:w-1/2 bg-gray-800/80 rounded-l-2xl border-l border-t border-b border-amber-500/20 overflow-hidden">
-          <video
-            className="w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-            src={getVideoSource()}
-            key={currentStep} // This forces the video to reload when the step changes
-          >
-            Your browser does not support the video tag.
-          </video>
-        </div>
+    
 
         {/* Form Column - Right Side */}
         <div className="w-full md:w-1/2">
@@ -342,7 +327,7 @@ export default function Signup() {
 
           {/* Form container with animation */}
           <div
-            className={`bg-gray-800/80 rounded-r-2xl p-6 shadow-xl border-r border-t border-b border-amber-500/20 transition-all duration-500 ${animationClass} relative overflow-hidden h-full`}
+            className={`bg-gray-800/80 rounded-r-2xl p-6 px-25 shadow-xl border-r border-t border-b border-amber-500/20 transition-all duration-500 ${animationClass} relative overflow-hidden h-full`}
           >
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-600 opacity-50"></div>
@@ -568,6 +553,18 @@ export default function Signup() {
                         <option value="Port Harcourt">Port Harcourt</option>
                       </select>
                     </div>
+                </div>
+                
+                <div>
+                    <label className="block mb-2 text-amber-100">📱 Phone Number:</label>
+                    <input
+                      type="text"
+                      name=""
+                      onChange={handleChange}
+                      className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
+                      placeholder="+234 ___ ___ ____"
+                      required
+                    />
                   </div>
 
                   <div>
@@ -786,6 +783,6 @@ export default function Signup() {
           </div>
         </div>
       </div>
-    </div>
+  
   )
 }

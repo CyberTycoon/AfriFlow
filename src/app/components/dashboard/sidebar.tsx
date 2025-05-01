@@ -49,7 +49,7 @@ const Sidebar = () => {
     { href: "/dashboard/trade", icon: Globe, label: "Trade" },
     { href: "/dashboard/meet-an-expert", icon: UserRoundCheck, label: "Meet an Expert" },
     { href: "/dashboard/marketplace", icon: Store, label: "Marketplace" },
-    { href: "/dashboard/compliance", icon: ShieldCheck, label: "Compliance" },
+    { href: "/dashboard/chatbot", icon: ShieldCheck, label: "Compliance" },
     { href: "/dashboard/voice", icon: MessageSquare, label: "Voice Assistant" },
     { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },
