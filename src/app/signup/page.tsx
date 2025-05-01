@@ -556,13 +556,13 @@ export default function Signup() {
                 </div>
                 
                 <div>
-                    <label className="block mb-2 text-amber-100">📱 Phone Number:</label>
+                    <label className="block mb-2 text-amber-100">National ID:</label>
                     <input
                       type="text"
                       name=""
                       onChange={handleChange}
                       className="w-full bg-gray-700 rounded-lg px-4 py-3 border border-amber-500/20 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-amber-100"
-                      placeholder="+234 ___ ___ ____"
+                      placeholder="Your National ID"
                       required
                     />
                   </div>
