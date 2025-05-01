@@ -320,7 +320,7 @@ export default function ConsultantsPage() {
             <Card key={consultant.id} className="bg-gray-800 border-amber-500/30 overflow-hidden hover:border-amber-400 transition-all duration-300">
               <div className="relative h-48 w-full">
                 <Image
-                  src={consultant.image || "/placeholder.svg"}
+                  src={consultant.image}
                   alt={consultant.name}
                   fill
                   className="object-cover"
