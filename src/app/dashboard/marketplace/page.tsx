@@ -133,7 +133,7 @@ const marketers = [
     country: "Senegal",
     state: "Dakar",
     market: "Sandaga Market",
-    image: "8.jpeg",
+    image: "/8.jpeg",
     products: ["Traditional clothing", "Modern fashion", "Accessories"],
     description: "Contemporary fashion with traditional Senegalese influences and techniques.",
     phone: "+221 77 123 4567",
@@ -149,7 +149,7 @@ const marketers = [
     country: "Burkina Faso",
     state: "Ouagadougou",
     market: "Grand Marché",
-    image: "",
+    image: "/9.jpeg",
     products: ["Leather bags", "Shoes", "Belts", "Wallets"],
     description: "Handcrafted leather goods using traditional tanning and crafting techniques.",
     phone: "+226 70 12 34 56",
@@ -165,7 +165,7 @@ const marketers = [
     country: "Kenya",
     state: "Nairobi",
     market: "Maasai Market",
-    image: "",
+    image: "/10.jpeg",
     products: ["Beaded jewelry", "Decorative items", "Traditional crafts"],
     description: "Colorful beadwork and crafts inspired by Kenyan tribal traditions and designs.",
     phone: "+254 722 123 456",
@@ -181,7 +181,7 @@ const marketers = [
     country: "Ghana",
     state: "Accra",
     market: "Makola Market",
-    image: "",
+    image: "/12.jpeg",
     products: ["Gold jewelry", "Traditional adornments", "Ceremonial items"],
     description: "Authentic Ghanaian gold jewelry crafted using traditional techniques.",
     phone: "+233 50 123 4567",
@@ -197,7 +197,7 @@ const marketers = [
     country: "Niger",
     state: "Niamey",
     market: "Grand Marché",
-    image: "",
+    image: "/13.jpeg",
     products: ["Dates", "Nuts", "Dried fruits", "Natural honey"],
     description: "Premium quality dates, nuts, and natural products from the Sahel region.",
     phone: "+227 90 12 34 56",
@@ -560,7 +560,7 @@ const handleStateChange = (state: string): void => {
               <CardFooter className="flex justify-between pt-2">
                 <Button variant="outline" className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10">
                   <Mail className="h-4 w-4 mr-2" />
-                  Email
+                  Contact
                 </Button>
                 <Button className="bg-gradient-to-r from-amber-500 to-orange-600 text-gray-900 hover:from-amber-400 hover:to-orange-500">
                   <Phone className="h-4 w-4 mr-2" />
