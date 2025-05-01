@@ -53,7 +53,7 @@ export default function HomePage() {
             <div className="text-left">
               <div className="inline-block mb-4 px-4 py-1 bg-amber-900/30 rounded-full border border-amber-500/20">
                 <span className="text-amber-400 font-medium">
-                  Voice-Powered African Trade
+                  Revolusionized African Trade
                 </span>
               </div>
               <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
@@ -66,7 +66,10 @@ export default function HomePage() {
               <p className="text-xl text-amber-100/80 mb-10 max-w-xl">
                 AfriFlow makes cross-border transactions and compliance easy for
                 African MSMEs. Send money, check regulations, and convert
-                currencies with your voice.
+                currencies with Afriflow.
+              </p>
+              <p className="text-2xl text-amber-300 mb-10 max-w-xl">
+               Trade In Africa, For Africa, By Africans.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
